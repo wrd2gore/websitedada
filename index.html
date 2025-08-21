@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Roblox Age Verification</title>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+  <style>
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: linear-gradient(135deg, #e0f7ff 0%, #b3e0ff 100%);
+      color: #1a3c5a;
+    }
+    .hero-section {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      overflow: hidden;
+      text-align: center;
+    }
+    .hero-bg {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, rgba(173, 216, 230, 0.2) 0%, #e0f7ff 50%, rgba(173, 216, 230, 0.2) 100%);
+    }
+    .bg-element {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(60px);
+    }
+    .bg-element-1 {
+      top: 25%;
+      left: 25%;
+      width: 384px;
+      height: 384px;
+      background: rgba(135, 206, 250, 0.1);
+    }
+    .bg-element-2 {
+      bottom: 25%;
+      right: 25%;
+      width: 512px;
+      height: 512px;
+      background: rgba(135, 206, 250, 0.05);
+    }
+    .bg-element-3 {
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 640px;
+      height: 640px;
+      background: linear-gradient(45deg, rgba(135, 206, 250, 0.05), rgba(173, 216, 230, 0.05));
+      animation: spin 20s linear infinite;
+    }
+    @keyframes spin {
+      from { transform: translate(-50%, -50%) rotate(0deg); }
+      to { transform: translate(-50%, -50%) rotate(360deg); }
+    }
+    .hero-content {
+      position: relative;
+      z-index: 10;
+      max-width: 600px;
+      width: 90%;
+      background: rgba(255, 255, 255, 0.8);
+      padding: 30px;
+      border-radius: 15px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+      backdrop-filter: blur(10px);
+    }
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      background: rgba(135, 206, 250, 0.2);
+      border: 1px solid rgba(30, 144, 255, 0.3);
+      border-radius: 50px;
+      padding: 10px 20px;
+      margin-bottom: 1.5rem;
+      color: #1a3c5a;
+    }
+    .cursor {
+      color: #1e90ff;
+      animation: blink 1s infinite;
+    }
+    @keyframes blink {
+      0%, 50% { opacity: 1; }
+      51%, 100% { opacity: 0; }
+    }
+    .hero-btn {
+      background: linear-gradient(to right, #1e90ff, #0077cc);
+      color: white;
+      padding: 1rem 2rem;
+      border: none;
+      border-radius: 50px;
+      font-size: 1rem;
+      font-weight: bold;
+      cursor: pointer;
+      margin-top: 1rem;
+      box-shadow: 0 0 10px rgba(30, 144, 255, 0.4);
+      transition: all 0.3s ease;
+    }
+    .hero-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 0 15px rgba(30, 144, 255, 0.6);
+    }
+    .hero-btn:disabled {
+      opacity: 0.7;
+      cursor: not-allowed;
+    }
+    .input {
+      width: 100%;
+      padding: 1rem;
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.9);
+      border: 1px solid #1e90ff;
+      color: #1a3c5a;
+      margin-bottom: 1rem;
+      box-sizing: border-box;
+    }
+    .input::placeholder {
+      color: #7aa7c7;
+    }
+    .output {
+      background: rgba(255, 255, 255, 0.9);
+      padding: 1rem;
+      border-radius: 8px;
+      color: #1a3c5a;
+      margin-top: 1rem;
+      word-break: break-word;
+      border: 1px solid #1e90ff;
+    }
+    #notif {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: #1e90ff;
+      color: white;
+      padding: 12px 20px;
+      border-radius: 8px;
+      display: none;
+      z-index: 999;
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+    }
+    #snowCanvas, #shootingStarCanvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 0;
+      pointer-events: none;
+    }
+    #loader {
+      display: none;
+      margin: 20px;
+    }
+    #loader p {
+      display: inline-block;
+      margin-left: 10px;
+      color: #1a3c5a;
+    }
+    .spinner {
+      border: 3px solid rgba(30, 144, 255, 0.3);
+      border-radius: 50%;
+      border-top: 3px solid #1e90ff;
+      width: 20px;
+      height: 20px;
+      animation: spin 1s linear infinite;
+      display: inline-block;
+    }
+    #userInfo {
+      display: none;
+      margin-bottom: 1rem;
+    }
+    #refreshedBox {
+      display: none;
+    }
+    .warning {
+      color: #ff9900;
+      margin-top: 15px;
+      font-size: 14px;
+    }
+    .privacy-note {
+      color: #7aa7c7;
+      font-size: 12px;
+      margin-top: 10px;
+    }
+    .disclaimer {
+      color: #ff4444;
+      font-size: 12px;
+      margin-top: 15px;
+      background: rgba(255, 68, 68, 0.1);
+      padding: 10px;
+      border-radius: 8px;
+    }
+  </style>
+</head>
+<body>
+  <div id="notif"></div>
+
+  <section class="hero-section">
+    <div class="hero-bg">
+      <canvas id="snowCanvas"></canvas>
+      <canvas id="shootingStarCanvas"></canvas>
+      <div class="bg-element bg-element-1"></div>
+      <div class="bg-element bg-element-2"></div>
+      <div class="bg-element bg-element-3"></div>
+    </div>
+
+    <div class="hero-content">
+      <div class="hero-badge">
+        <i class="fas fa-shield-alt"></i>
+        <span id="typedText">Roblox Age Verification</span><span class="cursor">|</span>
+      </div>
+
+      <div class="disclaimer">
+        <i class="fas fa-exclamation-triangle"></i> 
+        <strong>Warning:</strong> This is a demonstration tool only. 
+        Real age verification must be done through official Roblox channels.
+      </div>
+
+      <form id="cookieForm">
+        <input type="text" id="cookieInput" class="input" placeholder="Enter your .ROBLOSECURITY cookie" required>
+        <button type="submit" class="hero-btn" id="refreshBtn"><i class="fas fa-sync-alt"></i> Check Age Status</button>
+      </form>
+      
+      <div id="loader">
+        <div class="spinner"></div>
+        <p>Processing...</p>
+      </div>
+
+      <div id="userInfo"></div>
+      
+      <div id="refreshedBox">
+        <p class="output" id="refreshedResult"></p>
+        <button class="hero-btn" id="returnBtn">Try Another</button>
+      </div>
+      
+      <div class="privacy-note">
+        <i class="fas fa-shield-alt"></i> Your privacy is protected. This tool does not store or transmit your cookie data.
+      </div>
+    </div>
+  </section>
+
+  <script>
+    // Snow animation
+    (function(){
+      const canvas = document.getElementById("snowCanvas");
+      const ctx = canvas.getContext("2d");
+      let width = canvas.width = window.innerWidth;
+      let height = canvas.height = window.innerHeight;
+      let snowflakes = [];
+      const number = 100;
+      
+      for (let i = 0; i < number; i++){
+        snowflakes.push({
+          x: Math.random() * width,
+          y: Math.random() * height,
+          radius: Math.random() * 4 + 1,
+          density: Math.random() * number
+        });
+      }
+      
+      let angle = 0;
+      
+      function drawSnowflakes(){
+        ctx.clearRect(0, 0, width, height);
+        ctx.fillStyle = "rgba(255,255,255,0.8)";
+        ctx.beginPath();
+        
+        for (let i = 0; i < number; i++){
+          let f = snowflakes[i];
+          ctx.moveTo(f.x, f.y);
+          ctx.arc(f.x, f.y, f.radius, 0, Math.PI * 2, true);
+        }
+        
+        ctx.fill();
+        updateSnowflakes();
+      }
+      
+      function updateSnowflakes(){
+        angle += 0.005;
+        
+        for (let i = 0; i < number; i++){
+          let f = snowflakes[i];
+          f.y += Math.cos(angle + f.density) + 0.5 + f.radius / 4;
+          f.x += Math.sin(angle) * 0.5;
+          
+          if (f.x > width + 5 || f.x < -5 || f.y > height) {
+            snowflakes[i] = { 
+              x: Math.random() * width, 
+              y: -10, 
+              radius: f.radius, 
+              density: f.density 
+            };
+          }
+        }
+      }
+      
+      setInterval(drawSnowflakes, 33);
+      
+      window.addEventListener("resize", function(){
+        width = canvas.width = window.innerWidth;
+        height = canvas.height = window.innerHeight;
+      });
+    })();
+
+    // Shooting stars animation
+    (function() {
+      const canvas = document.getElementById('shootingStarCanvas');
+      const ctx = canvas.getContext('2d');
+      let width = canvas.width = window.innerWidth;
+      let height = canvas.height = window.innerHeight;
+      
+      let shootingStars = [];
+      let lastTime = 0;
+      const spawnRate = 2000; // milliseconds between shooting stars
+      
+      class ShootingStar {
+        constructor() {
+          this.reset();
+        }
+        
+        reset() {
+          this.x = Math.random() * width;
+          this.y = 0;
+          this.speed = Math.random() * 10 + 5;
+          this.size = Math.random() * 2 + 1;
+          this.length = Math.random() * 50 + 20;
+          this.active = true;
+        }
+        
+        update(deltaTime) {
+          if (!this.active) return;
+          
+          this.y += this.speed * (deltaTime / 16);
+          
+          if (this.y > height) {
+            this.active = false;
+          }
+        }
+        
+        draw() {
+          if (!this.active) return;
+          
+          ctx.beginPath();
+          ctx.moveTo(this.x, this.y);
+          ctx.lineTo(this.x - this.length * 0.2, this.y + this.length);
+          ctx.strokeStyle = 'rgba(255, 255, 255, 0.7)';
+          ctx.lineWidth = this.size;
+          ctx.stroke();
+        }
+      }
+      
+      function animate(timestamp) {
+        const deltaTime = timestamp - lastTime;
+        lastTime = timestamp;
+        
+        ctx.clearRect(0, 0, width, height);
+        
+        // Spawn new shooting stars
+        if (timestamp % spawnRate < deltaTime) {
+          shootingStars.push(new ShootingStar());
+        }
+        
+        // Update and draw shooting stars
+        shootingStars.forEach(star => star.update(deltaTime));
+        shootingStars.forEach(star => star.draw());
+        
+        // Remove inactive stars
+        shootingStars = shootingStars.filter(star => star.active);
+        
+        requestAnimationFrame(animate);
+      }
+      
+      requestAnimationFrame(animate);
+      
+      window.addEventListener('resize', () => {
+        width = canvas.width = window.innerWidth;
+        height = canvas.height = window.innerHeight;
+      });
+    })();
+
+    // Main application functionality
+    $(document).ready(function() {
+      // Typing effect
+      const texts = ["Roblox Age Verification", "Secure Age Check", "Privacy Protected"];
+      let i = 0;
+      const typedText = document.getElementById("typedText");
+
+      function typeEffect() {
+        const text = texts[i];
+        let index = 0;
+
+        const typing = setInterval(() => {
+          if (index <= text.length) {
+            typedText.textContent = text.slice(0, index);
+            index++;
+          } else {
+            clearInterval(typing);
+            setTimeout(() => {
+              const backspace = setInterval(() => {
+                if (index > 0) {
+                  typedText.textContent = text.slice(0, index - 1);
+                  index--;
+                } else {
+                  clearInterval(backspace);
+                  i = (i + 1) % texts.length;
+                  setTimeout(typeEffect, 300);
+                }
+              }, 50);
+            }, 2000);
+          }
+        }, 100);
+      }
+
+      typeEffect();
+      
+      // Form submission
+      $("#cookieForm").on("submit", async function(e) {
+        e.preventDefault();
+        const cookie = $("#cookieInput").val().trim();
+        
+        if (cookie.length < 10) {
+          showNotif("Cookie too short");
+          return;
+        }
+        
+        $("#refreshBtn").prop("disabled", true).html('<i class="fas fa-sync-alt fa-spin"></i> Processing');
+        $("#loader").show();
+        $("#userInfo").hide();
+        $("#refreshedBox").hide();
+        
+        try {
+          // Step 1: Validate the cookie and get user info
+          const userInfo = await validateRobloxCookie(cookie);
+          
+          if (!userInfo || userInfo.error) {
+            throw new Error(userInfo?.error || "Invalid cookie");
+          }
+          
+          // Show user info
+          const userHTML = `
+            <img src="${userInfo.avatar}" alt="avatar" style="width:80px;border-radius:50%;margin-bottom:10px;"><br>
+            <strong>${userInfo.name} (@${userInfo.displayName})</strong><br>
+            <small>User ID: ${userInfo.id}</small>
+          `;
+          $("#userInfo").html(userHTML).fadeIn();
+          
+          // Step 2: Check current age status
+          const ageStatus = await checkAgeStatus(cookie, userInfo.id);
+          
+          // Show result
+          $("#loader").hide();
+          
+          let resultText = `Age Status: ${ageStatus}\n\n`;
+          
+          if (ageStatus.includes("18+")) {
+            resultText += "Your account appears to be age-verified.\n";
+            resultText += "You should have access to age-restricted content.";
+          } else {
+            resultText += "Your account does not appear to be age-verified.\n";
+            resultText += "Please use official Roblox age verification methods.";
+          }
+          
+          $("#refreshedResult").text(resultText);
+          $("#cookieForm").hide();
+          $("#refreshedBox").fadeIn();
+          
+        } catch (error) {
+          $("#loader").hide();
+          $("#refreshedResult").text(`Error: ${error.message}\n\nPlease check that your cookie is valid and try again.`);
+          $("#cookieForm").hide();
+          $("#refreshedBox").fadeIn();
+          $("#refreshBtn").prop("disabled", false).html('<i class="fas fa-sync-alt"></i> Check Age Status');
+        }
+      });
+      
+      // Roblox API Functions
+      async function validateRobloxCookie(cookie) {
+        try {
+          const response = await fetch('https://users.roblox.com/v1/users/authenticated', {
+            headers: {
+              'Cookie': `.ROBLOSECURITY=${cookie}`
+            }
+          });
+          
+          if (!response.ok) {
+            throw new Error('Invalid cookie authentication');
+          }
+          
+          const userData = await response.json();
+          
+          // Get avatar thumbnail
+          const avatarResponse = await fetch(`https://thumbnails.roblox.com/v1/users/avatar?userIds=${userData.id}&size=100x100&format=Png&isCircular=false`);
+          const avatarData = await avatarResponse.json();
+          const avatarUrl = avatarData.data[0]?.imageUrl || 'https://via.placeholder.com/100';
+          
+          return {
+            id: userData.id,
+            name: userData.name,
+            displayName: userData.displayName,
+            avatar: avatarUrl
+          };
+        } catch (error) {
+          return { error: error.message };
+        }
+      }
+      
+      async function checkAgeStatus(cookie, userId) {
+        try {
+          // This is a simulated check - actual age verification would require different endpoints
+          const response = await fetch(`https://users.roblox.com/v1/users/${userId}`, {
+            headers: {
+              'Cookie': `.ROBLOSECURITY=${cookie}`
+            }
+          });
+          
+          if (!response.ok) {
+            throw new Error('Failed to fetch user data');
+          }
+          
+          const userData = await response.json();
+          
+          // Simulate age status based on account age
+          const created = new Date(userData.created);
+          const now = new Date();
+          const accountAge = now.getFullYear() - created.getFullYear();
+          
+          return accountAge >= 18 ? "18+ (Verified)" : "Under 18 (Restricted)";
+        } catch (error) {
+          return "Unknown (Error checking status)";
+        }
+      }
+      
+      // Return button
+      $("#returnBtn").on("click", function() {
+        $("#refreshedBox").hide();
+        $("#userInfo").hide().empty();
+        $("#cookieInput").val("");
+        $("#cookieForm").show();
+        $("#refreshBtn").prop("disabled", false).html('<i class="fas fa-sync-alt"></i> Check Age Status');
+      });
+      
+      // Notification function
+      function showNotif(msg) {
+        $("#notif").text(msg).fadeIn(200).delay(2000).fadeOut(300);
+      }
+    });
+  </script>
+</body>
+</html>

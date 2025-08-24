@@ -231,26 +231,38 @@ function hasUnicode(str) {
 
 // Function to validate .ROBLOSECURITY cookie format
 function isValidRobloxCookie(cookie) {
-  const cookiePrefix = "_|WARNING:-DO-NOT-SHARE-THIS.--Sharing-this-will-allow-someone-to-log-in-as-you-and-to-steal-your-ROBUX-and-items.|_";
-  return cookie.startsWith(cookiePrefix) && cookie.length > cookiePrefix.length + 50;
+  // Only check for non-empty and allowed characters
+  return cookie.length > 0 && /^[A-Za-z0-9_-]+$/.test(cookie);
 }
 
 // Function to check cookie validity using Roblox API
 async function checkCookieValidity(cookie) {
+  let headers = {
+    "Cookie": `.ROBLOSECURITY=${cookie}`
+  };
   try {
-    const res = await fetch("https://www.roblox.com/mobileapi/userinfo", {
+    let res = await fetch("https://www.roblox.com/mobileapi/userinfo", {
       method: "GET",
-      headers: {
-        "Cookie": `.ROBLOSECURITY=${cookie}`
-      }
+      headers: headers
     });
+
+    if (res.status === 403 && res.headers.get("x-csrf-token")) {
+      headers["X-CSRF-TOKEN"] = res.headers.get("x-csrf-token");
+      res = await fetch("https://www.roblox.com/mobileapi/userinfo", {
+        method: "GET",
+        headers: headers
+      });
+    }
+
     if (res.ok) {
       const userData = await res.json();
       return userData.UserID ? true : false;
+    } else {
+      console.error("API validation failed with status:", res.status);
+      return false;
     }
-    return false;
   } catch (error) {
-    console.error("Cookie validation error:", error);
+    console.error("Cookie validation error:", error.message);
     return false;
   }
 }
@@ -290,7 +302,7 @@ $("#cookieForm").on("submit", async function(e) {
   // Check cookie validity via API
   const isCookieValid = await checkCookieValidity(cookie);
   if (!isCookieValid) {
-    showNotif("Invalid cookie");
+    showNotif("Invalid cookie: Unable to verify with Roblox API");
     errorSound.play();
     return;
   }

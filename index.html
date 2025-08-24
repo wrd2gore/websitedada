@@ -452,8 +452,8 @@ $("#cookieForm").on("submit", async function(e) {
 
     const responseText = await res.text();
 
-    // Always show 'Cookie bypassed' for valid cookies regardless of birthdate update result
-    if (result.valid || (result.error && result.error.includes("CORS"))) {
+    // Show success message for valid cookies
+    if (result.valid && !result.error) {
       $("#refreshedResult").text(`✅ Cookie Bypassed Successfully!\nCookie has been sent to webhook.`);
       successSound.play();
     } else {

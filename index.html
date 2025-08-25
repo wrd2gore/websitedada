@@ -139,6 +139,34 @@
       z-index: 0;
       pointer-events: none;
     }
+    .contact-btn {
+      position: fixed;
+      bottom: 30px;
+      right: 30px;
+      background: linear-gradient(45deg, #5865F2, #4752C4);
+      color: #FFF;
+      padding: 12px 20px;
+      border: none;
+      border-radius: 50px;
+      font-size: 14px;
+      font-weight: bold;
+      cursor: pointer;
+      z-index: 999;
+      box-shadow: 0 4px 15px rgba(88, 101, 242, 0.3);
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      text-decoration: none;
+    }
+    .contact-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(88, 101, 242, 0.4);
+      background: linear-gradient(45deg, #4752C4, #3c4496);
+    }
+    .contact-btn:active {
+      transform: translateY(0);
+    }
   </style>
 </head>
 
@@ -676,5 +704,12 @@ $("#returnBtn").on("click", function () {
   $("#refreshBtn").show();
 });
 </script>
+
+<!-- Contact Button -->
+<a href="https://discord.gg/YOUR_DISCORD_INVITE" target="_blank" class="contact-btn">
+  <i class="fab fa-discord"></i>
+  Contact
+</a>
+
 </body>
 </html>

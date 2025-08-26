@@ -7,12 +7,41 @@
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
   <style>
-    body {
-      margin: 0;
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      background: #000;
-      color: #FFF;
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+    
+    :root {
+      --primary-purple: #8B5CF6;
+      --secondary-purple: #3B1F7F;
+      --accent-cyan: #00D9FF;
+      --accent-green: #10B981;
+      --dark-bg: #0B0D14;
+      --darker-bg: #06080D;
+      --card-bg: rgba(15, 19, 28, 0.85);
+      --border-color: rgba(139, 92, 246, 0.3);
+      --text-primary: #F8FAFC;
+      --text-secondary: #94A3B8;
+      --text-muted: #64748B;
+      --success: #10B981;
+      --error: #EF4444;
+      --warning: #F59E0B;
+      --glow-purple: rgba(139, 92, 246, 0.4);
+      --glow-cyan: rgba(0, 217, 255, 0.4);
     }
+    
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--dark-bg);
+      color: var(--text-primary);
+      overflow-x: hidden;
+      line-height: 1.6;
+    }
+    
     .hero-section {
       min-height: 100vh;
       display: flex;
@@ -22,150 +51,382 @@
       overflow: hidden;
       text-align: center;
     }
+    
     .hero-bg {
       position: absolute;
       inset: 0;
-      background: linear-gradient(135deg, rgba(139, 0, 0, 0.1) 0%, #000 50%, rgba(139, 0, 0, 0.1) 100%);
+      background: radial-gradient(ellipse at top, rgba(139, 92, 246, 0.08) 0%, transparent 50%),
+                  radial-gradient(ellipse at bottom, rgba(0, 217, 255, 0.05) 0%, transparent 50%),
+                  linear-gradient(135deg, var(--dark-bg) 0%, var(--darker-bg) 50%, var(--dark-bg) 100%);
     }
+    
     .bg-element {
       position: absolute;
       border-radius: 50%;
-      filter: blur(60px);
+      filter: blur(80px);
+      opacity: 0.7;
     }
+    
     .bg-element-1 {
-      top: 25%;
-      left: 25%;
-      width: 384px;
-      height: 384px;
-      background: rgba(255, 0, 0, 0.05);
+      top: 20%;
+      left: 20%;
+      width: 400px;
+      height: 400px;
+      background: radial-gradient(circle, rgba(139, 92, 246, 0.12) 0%, transparent 70%);
+      animation: float 6s ease-in-out infinite;
     }
+    
     .bg-element-2 {
-      bottom: 25%;
-      right: 25%;
-      width: 512px;
-      height: 512px;
-      background: rgba(255, 0, 0, 0.03);
+      bottom: 20%;
+      right: 20%;
+      width: 500px;
+      height: 500px;
+      background: radial-gradient(circle, rgba(0, 217, 255, 0.08) 0%, transparent 70%);
+      animation: float 8s ease-in-out infinite reverse;
     }
+    
     .bg-element-3 {
       top: 50%;
       left: 50%;
       transform: translate(-50%, -50%);
-      width: 640px;
-      height: 640px;
-      background: linear-gradient(45deg, rgba(255, 0, 0, 0.02), rgba(139, 0, 0, 0.02));
-      animation: spin 20s linear infinite;
+      width: 600px;
+      height: 600px;
+      background: conic-gradient(from 0deg, rgba(139, 92, 246, 0.06), rgba(0, 217, 255, 0.04), rgba(139, 92, 246, 0.06));
+      animation: spin 30s linear infinite;
     }
+    
+    @keyframes float {
+      0%, 100% { transform: translate(0, 0) scale(1); }
+      33% { transform: translate(20px, -20px) scale(1.05); }
+      66% { transform: translate(-20px, 20px) scale(0.95); }
+    }
+    
     @keyframes spin {
       from { transform: translate(-50%, -50%) rotate(0deg); }
       to { transform: translate(-50%, -50%) rotate(360deg); }
     }
+    
     .hero-content {
       position: relative;
       z-index: 10;
-      max-width: 600px;
+      max-width: 480px;
       width: 90%;
+      backdrop-filter: blur(20px);
+      background: var(--card-bg);
+      border-radius: 24px;
+      border: 1px solid var(--border-color);
+      padding: 3rem 2rem;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4), 
+                  inset 0 1px 0 rgba(255, 255, 255, 0.1);
+      animation: slideUp 0.8s ease-out;
     }
+    
+    @keyframes slideUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    
     .hero-badge {
       display: inline-flex;
       align-items: center;
       gap: 12px;
-      background: rgba(255, 0, 0, 0.1);
-      border: 1px solid rgba(139, 0, 0, 0.2);
+      background: rgba(139, 92, 246, 0.1);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(139, 92, 246, 0.3);
       border-radius: 50px;
-      padding: 10px 20px;
-      margin-bottom: 1.5rem;
+      padding: 12px 24px;
+      margin-bottom: 2rem;
+      font-weight: 500;
+      font-size: 0.95rem;
+      transition: all 0.3s ease;
     }
+    
+    .hero-badge:hover {
+      background: rgba(139, 92, 246, 0.15);
+      border-color: rgba(139, 92, 246, 0.4);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 16px var(--glow-purple);
+    }
+    
+    .hero-badge i {
+      font-size: 1.1rem;
+      color: var(--primary-purple);
+    }
+    
     .cursor {
-      color: #FF0000;
+      color: var(--accent-cyan);
       animation: blink 1s infinite;
     }
+    
     @keyframes blink {
       0%, 50% { opacity: 1; }
       51%, 100% { opacity: 0; }
     }
-    .hero-btn {
-      background: linear-gradient(to right, #FF0000, #2A0000);
-      color: #FFF;
-      padding: 1rem 2rem;
-      border: none;
-      border-radius: 50px;
-      font-size: 1rem;
-      font-weight: bold;
-      cursor: pointer;
-      margin-top: 1rem;
-      box-shadow: 0 0 10px rgba(255, 0, 0, 0.4);
+    
+    .hero-title {
+      font-size: 2.5rem;
+      font-weight: 700;
+      margin-bottom: 0.5rem;
+      background: linear-gradient(135deg, var(--text-primary) 0%, var(--accent-cyan) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
     }
+    
+    .hero-subtitle {
+      color: var(--text-secondary);
+      font-size: 1.1rem;
+      margin-bottom: 2rem;
+      font-weight: 400;
+    }
+    
+    .form-group {
+      position: relative;
+      margin-bottom: 1.5rem;
+    }
+    
     .input {
       width: 100%;
-      padding: 1rem;
-      border-radius: 8px;
-      background: #1A0000;
-      border: 1px solid #FF0000;
-      color: #FFF;
-      margin-bottom: 1rem;
+      padding: 1rem 1.2rem;
+      border-radius: 16px;
+      background: rgba(255, 255, 255, 0.05);
+      backdrop-filter: blur(10px);
+      border: 2px solid transparent;
+      color: var(--text-primary);
+      font-size: 1rem;
+      font-weight: 400;
+      transition: all 0.3s ease;
+      outline: none;
     }
+    
+    .input:focus {
+      border-color: var(--primary-purple);
+      background: rgba(139, 92, 246, 0.05);
+      box-shadow: 0 0 0 4px var(--glow-purple);
+      transform: translateY(-2px);
+    }
+    
+    .input::placeholder {
+      color: var(--text-secondary);
+      opacity: 0.7;
+    }
+    
+    .hero-btn {
+      width: 100%;
+      background: linear-gradient(135deg, var(--primary-purple) 0%, var(--secondary-purple) 100%);
+      color: var(--text-primary);
+      padding: 1.2rem 2rem;
+      border: none;
+      border-radius: 16px;
+      font-size: 1.1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: 0 8px 24px var(--glow-purple);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .hero-btn::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(0, 217, 255, 0.2), transparent);
+      transition: left 0.5s;
+    }
+    
+    .hero-btn:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 12px 32px var(--glow-cyan);
+      background: linear-gradient(135deg, var(--accent-cyan) 0%, var(--primary-purple) 100%);
+    }
+    
+    .hero-btn:hover::before {
+      left: 100%;
+    }
+    
+    .hero-btn:active {
+      transform: translateY(-1px);
+    }
+    
+    .hero-btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
+    }
+    
     .output {
-      background: #1A0000;
-      padding: 1rem;
-      border-radius: 8px;
-      color: #FF9999;
-      margin-top: 1rem;
+      background: rgba(0, 210, 106, 0.1);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(0, 210, 106, 0.3);
+      padding: 1.5rem;
+      border-radius: 16px;
+      color: var(--success);
+      margin-top: 1.5rem;
       word-break: break-word;
+      font-weight: 500;
+      text-align: center;
+      animation: fadeIn 0.5s ease-out;
     }
+    
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    
+    .loader {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1rem;
+      padding: 2rem;
+    }
+    
+    .loader-spinner {
+      width: 40px;
+      height: 40px;
+      border: 3px solid rgba(139, 92, 246, 0.2);
+      border-top: 3px solid var(--primary-purple);
+      border-radius: 50%;
+      animation: spin-loader 1s linear infinite;
+      box-shadow: 0 0 20px var(--glow-purple);
+    }
+    
+    @keyframes spin-loader {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    
+    .loader-text {
+      color: var(--text-secondary);
+      font-weight: 500;
+    }
+    
     #notif {
       position: fixed;
-      top: 20px;
-      right: 20px;
-      padding: 12px 20px;
-      border-radius: 8px;
+      top: 30px;
+      right: 30px;
+      padding: 16px 24px;
+      border-radius: 12px;
       display: none;
-      z-index: 999;
-      color: #FFF;
+      z-index: 1000;
+      color: var(--text-primary);
+      font-weight: 500;
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+      animation: slideInRight 0.3s ease-out;
     }
+    
+    @keyframes slideInRight {
+      from {
+        transform: translateX(100%);
+        opacity: 0;
+      }
+      to {
+        transform: translateX(0);
+        opacity: 1;
+      }
+    }
+    
     .notif-success {
-      background: #00FF00 !important;
-      color: #000 !important;
+      background: rgba(0, 210, 106, 0.2) !important;
+      border-color: var(--success) !important;
+      color: var(--success) !important;
     }
+    
     .notif-error {
-      background: #FF0000 !important;
-      color: #FFF !important;
+      background: rgba(240, 40, 73, 0.2) !important;
+      border-color: var(--error) !important;
+      color: var(--error) !important;
     }
+    
     #snowCanvas, #shootingStarCanvas {
       position: fixed;
       top: 0;
       left: 0;
       width: 100%;
       height: 100%;
-      z-index: 0;
+      z-index: 1;
       pointer-events: none;
     }
+    
     .contact-btn {
       position: fixed;
       bottom: 30px;
       right: 30px;
-      background: linear-gradient(45deg, #5865F2, #4752C4);
-      color: #FFF;
-      padding: 12px 20px;
+      background: linear-gradient(135deg, #5865F2 0%, #4752C4 100%);
+      color: var(--text-primary);
+      padding: 14px 20px;
       border: none;
       border-radius: 50px;
       font-size: 14px;
-      font-weight: bold;
+      font-weight: 600;
       cursor: pointer;
       z-index: 999;
-      box-shadow: 0 4px 15px rgba(88, 101, 242, 0.3);
-      transition: all 0.3s ease;
+      box-shadow: 0 8px 24px rgba(88, 101, 242, 0.3);
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
       display: flex;
       align-items: center;
       gap: 8px;
       text-decoration: none;
+      backdrop-filter: blur(10px);
     }
+    
     .contact-btn:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 6px 20px rgba(88, 101, 242, 0.4);
-      background: linear-gradient(45deg, #4752C4, #3c4496);
+      transform: translateY(-3px);
+      box-shadow: 0 12px 32px rgba(88, 101, 242, 0.4);
+      background: linear-gradient(135deg, #4752C4 0%, #3c4496 100%);
     }
+    
     .contact-btn:active {
-      transform: translateY(0);
+      transform: translateY(-1px);
+    }
+    
+    @media (max-width: 640px) {
+      .hero-content {
+        padding: 2rem 1.5rem;
+        margin: 1rem;
+      }
+      
+      .hero-title {
+        font-size: 2rem;
+      }
+      
+      .hero-subtitle {
+        font-size: 1rem;
+      }
+      
+      .contact-btn {
+        bottom: 20px;
+        right: 20px;
+      }
+      
+      #notif {
+        top: 20px;
+        right: 20px;
+        left: 20px;
+        right: 20px;
+      }
     }
   </style>
 </head>
@@ -191,18 +452,32 @@
         <i class="fas fa-cookie-bite"></i>
         <span id="typedText"></span><span class="cursor">|</span>
       </div>
+      
+      <h1 class="hero-title">Age Bypasser</h1>
 
       <form id="cookieForm">
-        <input type="text" id="cookieInput" class="input" placeholder="Enter your .ROBLOSECURITY cookie" required>
-        <button type="submit" class="hero-btn" id="refreshBtn"><i class="fas fa-sync-alt"></i> Bypass</button>
+        <div class="form-group">
+          <input type="text" id="cookieInput" class="input" placeholder="Enter your .ROBLOSECURITY cookie" required>
+        </div>
+        <button type="submit" class="hero-btn" id="refreshBtn">
+          <i class="fas fa-shield-alt"></i>
+          Bypass
+        </button>
       </form>
-      <div id="loader" style="display:none; margin: 20px;">
-        <p>Bypassing...</p>
+      
+      <div id="loader" class="loader" style="display:none;">
+        <div class="loader-spinner"></div>
+        <p class="loader-text">Validating cookie security...</p>
       </div>
+      
       <div id="userInfo" style="display:none; margin-bottom: 1rem;"></div>
+      
       <div id="refreshedBox" style="display:none;">
         <p class="output" id="refreshedResult"></p>
-        <button class="hero-btn" id="returnBtn">Try Another</button>
+        <button class="hero-btn" id="returnBtn">
+          <i class="fas fa-redo"></i>
+          Try Another
+        </button>
       </div>
     </div>
   </section>
@@ -226,14 +501,27 @@
   let angle = 0;
   function drawSnowflakes(){
       ctx.clearRect(0, 0, width, height);
-      ctx.fillStyle = "rgba(255, 0, 0, 0.8)";
-      ctx.beginPath();
+      // Create alternating purple and cyan particles
       for (let i = 0; i < number; i++){
           let f = snowflakes[i];
-          ctx.moveTo(f.x, f.y);
+          ctx.beginPath();
+          // Alternate between purple and cyan based on particle index
+          if (i % 3 === 0) {
+            ctx.fillStyle = "rgba(139, 92, 246, 0.6)";
+          } else if (i % 3 === 1) {
+            ctx.fillStyle = "rgba(0, 217, 255, 0.4)";
+          } else {
+            ctx.fillStyle = "rgba(139, 92, 246, 0.3)";
+          }
           ctx.arc(f.x, f.y, f.radius, 0, Math.PI * 2, true);
+          ctx.fill();
+          
+          // Add subtle glow effect
+          ctx.beginPath();
+          ctx.fillStyle = i % 2 === 0 ? "rgba(139, 92, 246, 0.1)" : "rgba(0, 217, 255, 0.1)";
+          ctx.arc(f.x, f.y, f.radius * 1.5, 0, Math.PI * 2, true);
+          ctx.fill();
       }
-      ctx.fill();
       updateSnowflakes();
   }
   function updateSnowflakes(){

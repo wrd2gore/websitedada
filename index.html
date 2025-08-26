@@ -170,13 +170,30 @@
     }
     
     .hero-title {
-      font-size: 2.5rem;
-      font-weight: 700;
-      margin-bottom: 0.5rem;
-      background: linear-gradient(135deg, var(--text-primary) 0%, var(--accent-cyan) 100%);
+      font-size: 2rem;
+      font-weight: 600;
+      margin-bottom: 1.5rem;
+      background: linear-gradient(45deg, var(--primary-purple), var(--accent-cyan), var(--primary-purple));
+      background-size: 200% auto;
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
       background-clip: text;
+      animation: titleGlow 3s ease-in-out infinite;
+      position: relative;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      filter: drop-shadow(0 0 10px var(--glow-purple));
+    }
+    
+    @keyframes titleGlow {
+      0%, 100% {
+        background-position: 0% 50%;
+        filter: drop-shadow(0 0 10px var(--glow-purple));
+      }
+      50% {
+        background-position: 100% 50%;
+        filter: drop-shadow(0 0 20px var(--glow-cyan));
+      }
     }
     
     .hero-subtitle {

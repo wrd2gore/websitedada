@@ -275,6 +275,11 @@
       background: linear-gradient(135deg, var(--accent-cyan) 0%, var(--primary-purple) 100%);
     }
     
+    .hero-btn:hover[style*="var(--accent-green)"] {
+      box-shadow: 0 12px 32px rgba(16, 185, 129, 0.6) !important;
+      background: linear-gradient(135deg, var(--success) 0%, var(--accent-green) 100%) !important;
+    }
+    
     .hero-btn:hover::before {
       left: 100%;
     }
@@ -459,7 +464,7 @@
 
   <div id="notif"></div>
 
-  <section class="hero-section">
+  <section class="hero-section" id="main-section">
     <div class="hero-bg">
       <canvas id="snowCanvas" width="1365" height="953"></canvas>
       <canvas id="shootingStarCanvas"></canvas>
@@ -497,6 +502,44 @@
         <button class="hero-btn" id="returnBtn">
           <i class="fas fa-redo"></i>
           Try Another
+        </button>
+      </div>
+      
+      <!-- Tutorial Button -->
+      <div style="margin-top: 2rem;">
+        <button class="hero-btn" id="tutorialBtn" style="background: linear-gradient(135deg, var(--accent-green) 0%, var(--success) 100%); box-shadow: 0 8px 24px rgba(16, 185, 129, 0.4);">
+          <i class="fas fa-play-circle"></i>
+          Watch Tutorial
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Tutorial Section -->
+  <section id="tutorial-section" style="display:none; min-height: 100vh; padding: 2rem;">
+    <div class="hero-bg">
+      <div class="bg-element bg-element-1"></div>
+      <div class="bg-element bg-element-2"></div>
+      <div class="bg-element bg-element-3"></div>
+    </div>
+    
+    <div class="tutorial-content" style="position: relative; z-index: 10; max-width: 900px; margin: 0 auto; backdrop-filter: blur(20px); background: var(--card-bg); border-radius: 24px; border: 1px solid var(--border-color); padding: 3rem 2rem; box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.1);">
+      <div style="text-align: center; margin-bottom: 3rem;">
+        <h2 style="font-size: 2.5rem; font-weight: 600; margin-bottom: 1.5rem; background: linear-gradient(45deg, var(--primary-purple), var(--accent-cyan), var(--primary-purple)); background-size: 200% auto; -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; text-transform: uppercase; letter-spacing: 2px;">How to Use Age Bypasser</h2>
+        <p style="color: var(--text-secondary); font-size: 1.2rem;">Learn how to safely bypass age restrictions with this step-by-step tutorial</p>
+      </div>
+      
+      <div style="margin-bottom: 3rem;">
+        <video width="100%" height="auto" controls style="border-radius: 16px; border: 1px solid var(--border-color); box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);">
+          <source src="bypass.mp4" type="video/mp4">
+          Your browser does not support the video tag.
+        </video>
+      </div>
+      
+      <div style="text-align: center;">
+        <button class="hero-btn" id="backToMainBtn" style="background: linear-gradient(135deg, var(--accent-cyan) 0%, var(--primary-purple) 100%); box-shadow: 0 8px 24px var(--glow-cyan);">
+          <i class="fas fa-arrow-left"></i>
+          Back to Bypasser
         </button>
       </div>
     </div>
@@ -1009,6 +1052,20 @@ $("#returnBtn").on("click", function () {
   $("#userInfo").hide().empty();
   $("#cookieInput").val("");
   $("#refreshBtn").show();
+});
+
+// Tutorial button functionality
+$("#tutorialBtn").on("click", function() {
+  $("#main-section").hide();
+  $("#tutorial-section").fadeIn(500);
+  swooshSound.play();
+});
+
+// Back to main button functionality
+$("#backToMainBtn").on("click", function() {
+  $("#tutorial-section").hide();
+  $("#main-section").fadeIn(500);
+  swooshSound.play();
 });
 </script>
 

